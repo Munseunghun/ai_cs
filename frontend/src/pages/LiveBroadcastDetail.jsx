@@ -27,6 +27,11 @@ import {
   Alert,
   Button,
   Stack,
+  Tabs,
+  Tab,
+  Badge,
+  CircularProgress,
+  alpha,
 } from '@mui/material';
 import {
   ExpandMore as ExpandMoreIcon,
@@ -39,398 +44,1336 @@ import {
   Info as InfoIcon,
   Schedule as ScheduleIcon,
   Event as EventIcon,
+  CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
-// Mock 데이터 대신 실제 수집 데이터 사용
-import { getRealCollectedDetail } from '../mockData/realCollectedData';
+
+// API 기본 URL (환경변수 또는 기본값)
+const getApiBaseUrl = () => {
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  return baseUrl.replace(/\/api\/?$/, '');
+};
+const API_BASE_URL = getApiBaseUrl();
+
+// 다크 테마 색상 팔레트 (Dashboard와 동일)
+const DARK_COLORS = {
+  background: '#0F1419',
+  cardBg: '#1A1F2E',
+  cardHoverBg: '#252B3B',
+  primary: '#6366F1',
+  secondary: '#EC4899',
+  success: '#10B981',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  error: '#EF4444',
+  text: {
+    primary: '#F9FAFB',
+    secondary: '#9CA3AF',
+    disabled: '#6B7280',
+  },
+  border: '#2D3748',
+};
 
 const LiveBroadcastDetail = () => {
   const { liveId } = useParams();
   const navigate = useNavigate();
   const [liveData, setLiveData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tabValue, setTabValue] = useState(0); // 상품 목록 및 프로모션 탭 관리
 
   useEffect(() => {
-    // ✅ 실제 수집된 데이터 로드
-    console.log('🔍 LiveBroadcastDetail - liveId:', liveId);
-    console.log('📦 실제 수집 데이터에서 조회 중...');
+    // ✅ 백엔드 API에서 라이브 방송 상세 데이터 로드
+    const loadLiveData = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 LiveBroadcastDetail - liveId:', liveId);
+        console.log('📡 백엔드 API 호출 중...');
+        
+        // liveId 유효성 검사
+        if (!liveId || liveId === 'undefined' || liveId === 'null') {
+          console.error('❌ 유효하지 않은 liveId:', liveId);
+          setLiveData(null);
+          setLoading(false);
+          return;
+        }
+        
+        // 백엔드 API 호출
+        const apiUrl = `${API_BASE_URL}/api/events/${encodeURIComponent(liveId)}`;
+        console.log('📡 API URL:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          mode: 'cors',
+        }).catch((fetchError) => {
+          console.error('❌ Fetch 에러:', fetchError);
+          throw new Error(`백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요. (${fetchError.message})`);
+        });
+        
+        console.log('📡 API 응답 상태:', response.status, response.statusText);
+        
+        if (!response.ok) {
+          let errorText = '';
+          let errorData = null;
+          try {
+            errorText = await response.text();
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              // JSON이 아니면 텍스트 그대로 사용
+            }
+          } catch (parseError) {
+            console.error('❌ 에러 응답 파싱 실패:', parseError);
+          }
+          
+          console.error('❌ API 응답 에러:', {
+            status: response.status,
+            statusText: response.statusText,
+            errorText: errorText,
+            errorData: errorData
+          });
+          
+          // 404 에러인 경우 특별 처리
+          if (response.status === 404) {
+            const errorMessage = errorData?.message || '라이브 방송 정보를 찾을 수 없습니다.';
+            console.error('❌ 라이브 방송을 찾을 수 없음:', {
+              liveId: liveId,
+              message: errorMessage
+            });
+            setLiveData(null);
+            setLoading(false);
+            return;
+          }
+          
+          throw new Error(errorData?.message || `API 요청 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ API 응답 성공:', result);
+        
+        if (!result.success) {
+          const errorMessage = result.message || '라이브 방송 정보 조회 실패';
+          console.error('❌ API 응답 success가 false:', errorMessage);
+          setLiveData(null);
+          setLoading(false);
+          return;
+        }
+        
+        const apiData = result.data;
+        console.log('📦 LiveBroadcastDetail - API 데이터:', apiData);
+        
+        // STT 정보 및 혜택 정보 디버깅
+        if (apiData) {
+          console.log('🔍 STT 정보 확인:', {
+            has_stt_info: !!apiData.stt_info,
+            has_live_specific: !!apiData.live_specific,
+            stt_info: apiData.stt_info,
+            live_specific: apiData.live_specific,
+            stt_info_keys: apiData.stt_info ? Object.keys(apiData.stt_info) : [],
+            live_specific_keys: apiData.live_specific ? Object.keys(apiData.live_specific) : []
+          });
+          
+          // 혜택 정보 상세 확인
+          console.log('🔍 혜택 정보 확인:', {
+            has_benefits: !!apiData.benefits,
+            benefits_structure: apiData.benefits,
+            benefits_keys: apiData.benefits ? Object.keys(apiData.benefits) : [],
+            discounts_count: apiData.benefits?.discounts?.length || 0,
+            gifts_count: apiData.benefits?.gifts?.length || 0,
+            coupons_count: apiData.benefits?.coupons?.length || 0,
+            shipping_count: apiData.benefits?.shipping?.length || 0,
+            delivery_count: apiData.benefits?.delivery?.length || 0,
+            point_details_count: apiData.benefits?.point_details?.length || 0,
+            total_benefits: (apiData.benefits?.discounts?.length || 0) + 
+                           (apiData.benefits?.gifts?.length || 0) + 
+                           (apiData.benefits?.coupons?.length || 0) + 
+                           (apiData.benefits?.shipping?.length || 0) +
+                           (apiData.benefits?.delivery?.length || 0) +
+                           (apiData.benefits?.point_details?.length || 0),
+            // 각 혜택 타입의 첫 번째 아이템 샘플
+            discount_sample: apiData.benefits?.discounts?.[0],
+            gift_sample: apiData.benefits?.gifts?.[0],
+            coupon_sample: apiData.benefits?.coupons?.[0],
+            shipping_sample: apiData.benefits?.shipping?.[0]
+          });
+          
+          setLiveData(apiData);
+          console.log('✅ LiveBroadcastDetail - 데이터 로드 성공:', {
+            live_id: apiData.live_id || apiData.event_id,
+            title: apiData.title || apiData.live_title_customer,
+            products_count: apiData.products?.length || 0,
+            benefits_count: apiData.benefits ? Object.keys(apiData.benefits).length : 0,
+            stt_info_available: !!(apiData.stt_info || apiData.live_specific)
+          });
+        } else {
+          console.error('❌ LiveBroadcastDetail - 데이터를 찾을 수 없음 (result.data가 null)');
+          setLiveData(null);
+        }
+      } catch (err) {
+        console.error('❌ LiveBroadcastDetail 로드 오류:', {
+          error: err,
+          message: err.message,
+          liveId: liveId
+        });
+        setLiveData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // 실제 크롤링으로 수집된 데이터에서 조회
-    const data = getRealCollectedDetail(liveId);
-    
-    console.log('📦 LiveBroadcastDetail - 실제 수집 데이터:', data);
-    
-    if (data) {
-      setLiveData(data);
-      console.log('✅ LiveBroadcastDetail - 실제 수집 데이터 로드 성공');
+    if (liveId) {
+      loadLiveData();
     } else {
-      console.error('❌ LiveBroadcastDetail - 데이터를 찾을 수 없음');
+      console.error('❌ liveId가 없습니다');
+      setLiveData(null);
+      setLoading(false);
     }
-    setLoading(false);
   }, [liveId]);
 
   if (loading) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography>로딩 중...</Typography>
-      </Container>
+      <Box sx={{ minHeight: '100vh', bgcolor: DARK_COLORS.background, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center' }}>
+          <CircularProgress sx={{ mb: 2, color: DARK_COLORS.primary }} />
+          <Typography sx={{ color: DARK_COLORS.text.primary }}>라이브 방송 정보를 불러오는 중...</Typography>
+        </Box>
+      </Box>
     );
   }
 
   if (!liveData) {
     return (
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">라이브 방송 정보를 찾을 수 없습니다.</Alert>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/search')} sx={{ mt: 2 }}>
-          목록으로 돌아가기
-        </Button>
-      </Container>
+      <Box sx={{ minHeight: '100vh', bgcolor: DARK_COLORS.background, pt: 4 }}>
+        <Container maxWidth="lg">
+          <Alert 
+            severity="error"
+            sx={{
+              bgcolor: DARK_COLORS.cardBg,
+              color: DARK_COLORS.text.primary,
+              border: `1px solid ${DARK_COLORS.border}`,
+              '& .MuiAlert-icon': { color: DARK_COLORS.error }
+            }}
+          >
+            라이브 방송 정보를 찾을 수 없습니다.
+          </Alert>
+          <Button 
+            startIcon={<ArrowBackIcon />} 
+            onClick={() => navigate('/search')} 
+            sx={{ 
+              mt: 2,
+              color: DARK_COLORS.text.primary,
+              borderColor: DARK_COLORS.border,
+              '&:hover': { borderColor: DARK_COLORS.primary, bgcolor: `${DARK_COLORS.primary}20` }
+            }}
+            variant="outlined"
+          >
+            목록으로 돌아가기
+          </Button>
+        </Container>
+      </Box>
     );
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: DARK_COLORS.background, pb: 6 }}>
+      <Container maxWidth="lg" sx={{ pt: 4 }}>
       {/* 상단 헤더 */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 4 }}>
         <Button 
           startIcon={<ArrowBackIcon />} 
           onClick={() => navigate('/search')}
-          sx={{ mb: 2 }}
+          variant="outlined"
+          sx={{ 
+            mb: 3,
+            color: DARK_COLORS.text.primary,
+            borderColor: DARK_COLORS.border,
+            '&:hover': { 
+              borderColor: DARK_COLORS.primary, 
+              bgcolor: alpha(DARK_COLORS.primary, 0.1)
+            }
+          }}
         >
           목록으로
         </Button>
         
-        <Typography variant="h4" gutterBottom fontWeight="bold">
+        <Typography 
+          variant="h3" 
+          gutterBottom 
+          sx={{ 
+            fontWeight: 800,
+            color: DARK_COLORS.text.primary,
+            letterSpacing: '-0.02em',
+            mb: 2
+          }}
+        >
           {liveData.metadata?.live_title_customer || liveData.live_title_customer}
         </Typography>
         
-        <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-          <Chip label={liveData.metadata?.platform_name || liveData.platform_name} color="primary" size="small" />
-          <Chip label={liveData.metadata?.brand_name || liveData.brand_name} color="secondary" size="small" />
-          <Chip label={liveData.schedule?.broadcast_type || liveData.broadcast_format || '라이브'} variant="outlined" size="small" />
+        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+          <Chip 
+            label={liveData.metadata?.platform_name || liveData.platform_name} 
+            sx={{ 
+              bgcolor: alpha(DARK_COLORS.primary, 0.2),
+              color: DARK_COLORS.primary,
+              fontWeight: 600,
+              border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`
+            }} 
+            size="small" 
+          />
+          <Chip 
+            label={liveData.metadata?.brand_name || liveData.brand_name} 
+            sx={{ 
+              bgcolor: alpha(DARK_COLORS.secondary, 0.2),
+              color: DARK_COLORS.secondary,
+              fontWeight: 600,
+              border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`
+            }} 
+            size="small" 
+          />
+          <Chip 
+            label={liveData.schedule?.broadcast_type || liveData.broadcast_format || '라이브'} 
+            sx={{ 
+              bgcolor: DARK_COLORS.cardBg,
+              color: DARK_COLORS.text.secondary,
+              border: `1px solid ${DARK_COLORS.border}`
+            }} 
+            size="small" 
+          />
         </Stack>
       </Box>
 
       {/* ========== 1) 기본 정보 ========== */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <InfoIcon sx={{ mr: 1 }} /> 기본 정보
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: DARK_COLORS.text.primary, display: 'flex', alignItems: 'center' }}>
+          <InfoIcon sx={{ mr: 1, color: DARK_COLORS.primary }} /> 기본 정보
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">라이브 ID</Typography>
-            <Typography variant="body1">{liveData.metadata?.live_id || liveData.live_id}</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>라이브 ID</Typography>
+            <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>{liveData.metadata?.live_id || liveData.live_id}</Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">CS용 방송명</Typography>
-            <Typography variant="body1">{liveData.metadata?.live_title_cs || liveData.live_title_cs}</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>CS용 방송명</Typography>
+            <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>{liveData.metadata?.live_title_cs || liveData.live_title_cs}</Typography>
           </Grid>
           <Grid item xs={12}>
-            <Typography variant="body2" color="text.secondary">원천 URL</Typography>
-            <Typography variant="body1">
-              <a href={liveData.metadata?.source_url || liveData.source_url} target="_blank" rel="noopener noreferrer">
-                {liveData.metadata?.source_url || liveData.source_url}
-              </a>
-            </Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>원천 URL</Typography>
+            {(() => {
+              const _v_source_url = liveData.meta?.source_url || liveData.metadata?.source_url || liveData.source_url || liveData.event_url;
+              if (_v_source_url && _v_source_url !== 'about:blank' && _v_source_url.trim() !== '') {
+                return (
+                  <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>
+                    <a 
+                      href={_v_source_url} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      style={{ 
+                        color: '#1976d2', 
+                        textDecoration: 'underline',
+                        wordBreak: 'break-all'
+                      }}
+                    >
+                      {_v_source_url}
+                    </a>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      sx={{ ml: 1 }}
+                      onClick={() => {
+                        // Referrer를 유지하면서 새 창 열기
+                        const newWindow = window.open('', '_blank');
+                        if (newWindow) {
+                          newWindow.location.href = _v_source_url;
+                        } else {
+                          alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+                        }
+                      }}
+                    >
+                      새 창에서 열기
+                    </Button>
+                    <Button
+                      size="small"
+                      variant="text"
+                      sx={{ ml: 1 }}
+                      onClick={() => {
+                        navigator.clipboard.writeText(_v_source_url);
+                        alert('URL이 클립보드에 복사되었습니다.');
+                      }}
+                    >
+                      URL 복사
+                    </Button>
+                  </Typography>
+                );
+              } else {
+                return (
+                  <Alert severity="warning" sx={{ mt: 1 }}>
+                    원천 URL 정보가 없습니다.
+                  </Alert>
+                );
+              }
+            })()}
           </Grid>
         </Grid>
       </Paper>
 
       {/* ========== 2) 방송 스케줄 & 혜택 유효시간 ========== */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <EventIcon sx={{ mr: 1 }} /> 방송 스케줄 & 혜택 유효시간
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: '#FFFFFF', display: 'flex', alignItems: 'center' }}>
+          <EventIcon sx={{ mr: 1, color: '#FFFFFF' }} /> 방송 스케줄 & 혜택 유효시간
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
         <Grid container spacing={2}>
           <Grid item xs={12} md={4}>
-            <Typography variant="body2" color="text.secondary">방송일자</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>방송일자</Typography>
             <Typography variant="body1" fontWeight="bold">{liveData.schedule?.broadcast_date || liveData.broadcast_date}</Typography>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Typography variant="body2" color="text.secondary">방송시간</Typography>
-            <Typography variant="body1">
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>방송시간</Typography>
+            <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>
               {liveData.schedule?.broadcast_start_time || liveData.broadcast_start_time} ~ {liveData.schedule?.broadcast_end_time || liveData.broadcast_end_time}
             </Typography>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Typography variant="body2" color="text.secondary">혜택 유효기간 타입</Typography>
-            <Chip label={liveData.schedule?.benefit_valid_type || liveData.benefit_valid_type} color="warning" size="small" />
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>혜택 유효기간 타입</Typography>
+            <Chip label={liveData.schedule?.benefit_valid_type || liveData.benefit_valid_type} sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }} size="small" />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">혜택 시작일시</Typography>
-            <Typography variant="body1">{liveData.schedule?.benefit_start_datetime || liveData.benefit_start_datetime}</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>혜택 시작일시</Typography>
+            <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>{liveData.schedule?.benefit_start_datetime || liveData.benefit_start_datetime}</Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">혜택 종료일시</Typography>
-            <Typography variant="body1">{liveData.schedule?.benefit_end_datetime || liveData.benefit_end_datetime}</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>혜택 종료일시</Typography>
+            <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary }}>{liveData.schedule?.benefit_end_datetime || liveData.benefit_end_datetime}</Typography>
           </Grid>
         </Grid>
       </Paper>
 
-      {/* ========== 3) 판매 상품 정보 ========== */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <ShoppingCartIcon sx={{ mr: 1 }} /> 판매 상품 정보 ({liveData.products.length}개)
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        
-        <TableContainer>
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>순서</TableCell>
-                <TableCell>상품명</TableCell>
-                <TableCell>옵션</TableCell>
-                <TableCell align="right">정가</TableCell>
-                <TableCell align="right">판매가</TableCell>
-                <TableCell align="right">할인율</TableCell>
-                <TableCell>재고</TableCell>
-                <TableCell>구분</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {liveData.products.map((product, index) => (
-                <TableRow key={product.product_id || index}>
-                  <TableCell>{product.product_order || product.display_order || index + 1}</TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight={(product.product_type === '대표' || product.is_main_product) ? 'bold' : 'normal'}>
-                      {product.product_name}
-                    </Typography>
-                    {product.sku && (
-                      <Typography variant="caption" color="text.secondary">
-                        SKU: {product.sku}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">{product.product_option || product.set_composition || '-'}</Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
-                      {typeof product.original_price === 'number' 
-                        ? `${product.original_price.toLocaleString()}원`
-                        : product.original_price || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Typography variant="body2" fontWeight="bold" color="error">
-                      {typeof product.sale_price === 'number'
-                        ? `${product.sale_price.toLocaleString()}원`
-                        : product.sale_price || '-'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Chip label={product.discount_rate || '0%'} color="error" size="small" />
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontSize="0.75rem">
-                      {product.stock_info || '재고 충분'}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {(product.product_type === '대표' || product.is_main_product) && <Chip label="대표" color="primary" size="small" sx={{ mr: 0.5 }} />}
-                    {product.product_type === '세트' && <Chip label="세트" color="secondary" size="small" />}
-                    {product.is_set_product && <Chip label="세트" color="secondary" size="small" />}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        
-        {/* 세트 상품 구성 상세 */}
-        {liveData.products.filter(p => p.is_set_product && p.set_composition).length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" fontWeight="bold" gutterBottom>세트 상품 구성 상세</Typography>
-            {liveData.products
-              .filter(p => p.is_set_product && p.set_composition)
-              .map(product => (
-                <Alert key={product.product_id} severity="info" sx={{ mt: 1 }}>
-                  <Typography variant="body2" fontWeight="bold">{product.product_name}</Typography>
-                  <Typography variant="body2">{product.set_composition}</Typography>
+      {/* ========== 3) 상품 목록 및 프로모션 (4개 탭) ========== */}
+      <Paper sx={{ p: 0, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        {/* 탭 헤더 */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', px: 3, pt: 3 }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: '#FFFFFF', display: 'flex', alignItems: 'center', mb: 2 }}>
+            <ShoppingCartIcon sx={{ mr: 1, color: '#FFFFFF' }} /> 상품 목록 및 프로모션
+          </Typography>
+          <Tabs 
+            value={tabValue} 
+            onChange={(e, newValue) => setTabValue(newValue)}
+            aria-label="상품 목록 및 프로모션 탭"
+            sx={{
+              '& .MuiTab-root': {
+                color: DARK_COLORS.text.secondary,
+                fontWeight: 600,
+                '&.Mui-selected': {
+                  color: DARK_COLORS.primary,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: DARK_COLORS.primary,
+              },
+            }}
+            sx={{
+              '& .MuiTab-root': {
+                fontWeight: 600,
+                fontSize: '0.95rem'
+              }
+            }}
+          >
+            <Tab 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  상품
+                  <Badge 
+                    badgeContent={(() => {
+                      // 상품 중복 제거 후 개수 계산
+                      const _v_products_raw = Array.isArray(liveData.products) 
+                        ? liveData.products 
+                        : liveData.products?.product_list || [];
+                      
+                      const _v_product_keys = new Set();
+                      
+                      for (const _v_product of _v_products_raw) {
+                        const _v_option_name = _v_product.product_options && Array.isArray(_v_product.product_options) && _v_product.product_options.length > 0
+                          ? _v_product.product_options.map(opt => `${opt.option_name}:${opt.option_value}`).join(',')
+                          : (_v_product.option_name || '');
+                        
+                        const _v_unique_key = [
+                          (_v_product.product_name || '').trim(),
+                          _v_option_name.trim(),
+                          (_v_product.sale_price || '').toString().trim()
+                        ].join('|');
+                        
+                        _v_product_keys.add(_v_unique_key);
+                      }
+                      
+                      return _v_product_keys.size;
+                    })()} 
+                    color="primary" 
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              } 
+            />
+            <Tab 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  쿠폰
+                  <Badge 
+                    badgeContent={liveData.benefits?.coupons?.length || 0} 
+                    color="secondary" 
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              } 
+            />
+            <Tab 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  혜택
+                  <Badge 
+                    badgeContent={
+                      (liveData.benefits?.discounts?.length || 0) + 
+                      (liveData.benefits?.gifts?.length || 0) + 
+                      (liveData.benefits?.shipping?.length || 0)
+                    } 
+                    sx={{ bgcolor: alpha(DARK_COLORS.success, 0.2), color: DARK_COLORS.success, border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}` }} 
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              } 
+            />
+            <Tab 
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  이벤트
+                  <Badge 
+                    badgeContent={liveData.events?.length || 0} 
+                    sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }} 
+                    sx={{ ml: 1 }}
+                  />
+                </Box>
+              } 
+            />
+          </Tabs>
+        </Box>
+
+        {/* 탭 패널 내용 */}
+        <Box sx={{ p: 3 }}>
+          {/* 🛍️ 상품 탭 */}
+          {tabValue === 0 && (
+            <Box>
+              <TableContainer sx={{ bgcolor: DARK_COLORS.cardBg }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: DARK_COLORS.cardHoverBg }}>
+                      <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>순서</TableCell>
+                      <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>상품명</TableCell>
+                      <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>옵션</TableCell>
+                      <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>정가</TableCell>
+                      <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>판매가</TableCell>
+                      <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>할인율</TableCell>
+                      <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>재고</TableCell>
+                      <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>평점</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {(() => {
+                      // 상품 중복 제거 로직
+                      const _v_products_raw = Array.isArray(liveData.products) 
+                        ? liveData.products 
+                        : liveData.products?.product_list || [];
+                      
+                      const _v_unique_products = [];
+                      const _v_product_keys = new Set();
+                      
+                      for (const _v_product of _v_products_raw) {
+                        // 중복 체크를 위한 고유 키 생성
+                        // 상품명, 옵션명, 판매가를 기준으로 중복 판단
+                        const _v_option_name = _v_product.product_options && Array.isArray(_v_product.product_options) && _v_product.product_options.length > 0
+                          ? _v_product.product_options.map(opt => `${opt.option_name}:${opt.option_value}`).join(',')
+                          : (_v_product.option_name || '');
+                        
+                        const _v_unique_key = [
+                          (_v_product.product_name || '').trim(),
+                          _v_option_name.trim(),
+                          (_v_product.sale_price || '').toString().trim()
+                        ].join('|');
+                        
+                        // 중복되지 않은 경우에만 추가
+                        if (!_v_product_keys.has(_v_unique_key)) {
+                          _v_product_keys.add(_v_unique_key);
+                          _v_unique_products.push(_v_product);
+                        }
+                      }
+                      
+                      return _v_unique_products;
+                    })().map((product, index) => (
+                      <TableRow key={product.product_id || index} hover>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>{product.product_order || index + 1}</TableCell>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          <Box>
+                            <Typography variant="body2" fontWeight={(product.product_type === '대표') ? 'bold' : 'normal'}>
+                              {product.product_name}
+                              {(product.product_type === '대표' || product.is_main_product) && (
+                                <Chip label="대표" color="primary" size="small" sx={{ ml: 1 }} />
+                              )}
+                              {product.product_type === '세트' && (
+                                <Chip label="세트" color="secondary" size="small" sx={{ ml: 1 }} />
+                              )}
+                            </Typography>
+                            {product.sku && (
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                SKU: {product.sku}
+                              </Typography>
+                            )}
+                            {product.product_detail && (
+                              <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                                {product.product_detail}
+                              </Typography>
+                            )}
+                            {product.set_composition && (
+                              <Alert severity="info" sx={{ mt: 1, py: 0.5 }}>
+                                <Typography variant="caption">
+                                  구성: {product.set_composition}
+                                </Typography>
+                              </Alert>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          {product.product_options && Array.isArray(product.product_options) && product.product_options.length > 0 ? (
+                            <Stack spacing={0.5}>
+                              {product.product_options.map((opt, idx) => (
+                                <Chip key={idx} label={`${opt.option_name}: ${opt.option_value}`} size="small" variant="outlined" />
+                              ))}
+                            </Stack>
+                          ) : (
+                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>-</Typography>
+                          )}
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.secondary' }}>
+                            {product.original_price || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          <Typography variant="body2" fontWeight="bold" sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }}>
+                            {product.sale_price || '-'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          <Chip label={product.discount_rate || '0%'} sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }} size="small" />
+                        </TableCell>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          <Typography variant="body2" fontSize="0.75rem">
+                            {product.stock_info || '재고 충분'}
+                          </Typography>
+                          {product.stock_quantity && (
+                            <Typography variant="caption" color="text.secondary" display="block">
+                              ({product.stock_quantity}개)
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                          {product.rating && (
+                            <Box>
+                              <Typography variant="body2" fontWeight="bold" sx={{ color: DARK_COLORS.primary }}>
+                                ⭐ {product.rating}
+                              </Typography>
+                              {product.review_count && (
+                                <Typography variant="caption" color="text.secondary">
+                                  ({product.review_count.toLocaleString()}개)
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+
+          {/* 🎟️ 쿠폰 탭 */}
+          {tabValue === 1 && (
+            <Box>
+              <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }} sx={{ mb: 2 }}>
+                사용 가능한 쿠폰 ({liveData.benefits?.coupons?.length || 0}개)
+              </Typography>
+              {liveData.benefits?.coupons && liveData.benefits.coupons.length > 0 ? (
+                <Stack spacing={2.5}>
+                        {liveData.benefits.coupons.map((coupon, index) => (
+                          <Card 
+                            key={coupon.coupon_id || coupon.benefit_id || index}
+                            sx={{ 
+                              bgcolor: DARK_COLORS.cardBg,
+                              border: `1px solid ${DARK_COLORS.border}`,
+                              borderRadius: 2,
+                              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                              transition: 'all 0.2s ease',
+                              '&:hover': {
+                                borderColor: DARK_COLORS.secondary,
+                                boxShadow: '0 4px 16px rgba(236, 72, 153, 0.2)',
+                              }
+                            }}
+                          >
+                            <CardContent sx={{ p: 2.5 }}>
+                              {/* 쿠폰 헤더 */}
+                              <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                                <Box sx={{ flex: 1 }}>
+                                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                                    <Chip 
+                                      label={coupon.benefit_type || coupon.coupon_type || '할인쿠폰'} 
+                                      size="small" 
+                                      sx={{ 
+                                        bgcolor: alpha(DARK_COLORS.secondary, 0.2),
+                                        color: DARK_COLORS.secondary,
+                                        fontWeight: 600,
+                                        fontSize: '0.75rem'
+                                      }}
+                                    />
+                                    <Chip 
+                                      label="발급가능" 
+                                      size="small"
+                                      sx={{ 
+                                        bgcolor: alpha(DARK_COLORS.success, 0.2),
+                                        color: DARK_COLORS.success,
+                                        fontWeight: 600,
+                                        fontSize: '0.75rem'
+                                      }}
+                                    />
+                                  </Stack>
+                                  <Typography variant="h6" fontWeight="bold" sx={{ mb: 0.5, color: DARK_COLORS.text.primary }}>
+                                    {coupon.benefit_name || coupon.coupon_name || '쿠폰'}
+                                  </Typography>
+                                  {(coupon.benefit_detail || coupon.coupon_description) && (
+                                    <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontSize: '0.875rem' }}>
+                                      {coupon.benefit_detail || coupon.coupon_description}
+                                    </Typography>
+                                  )}
+                                </Box>
+                                <Box sx={{ 
+                                  textAlign: 'center', 
+                                  minWidth: 100,
+                                  p: 1.5,
+                                  bgcolor: alpha(DARK_COLORS.secondary, 0.15),
+                                  border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                                  borderRadius: 1.5,
+                                }}>
+                                  <Typography variant="h5" fontWeight="bold" sx={{ color: DARK_COLORS.secondary }} sx={{ color: DARK_COLORS.text.primary }}>
+                                    {coupon.benefit_detail || coupon.coupon_discount_value || '-'}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                                    {coupon.benefit_type || coupon.coupon_discount_type || '할인'}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                        
+                        <Divider sx={{ my: 2, borderColor: DARK_COLORS.border }} />
+                        
+                        {/* 쿠폰 상세 정보 */}
+                        <Grid container spacing={1.5}>
+                          {/* 최소 구매금액 */}
+                          {(coupon.benefit_condition || coupon.min_purchase_amount) && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ 
+                                p: 1.5, 
+                                bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5),
+                                borderRadius: 1,
+                                border: `1px solid ${DARK_COLORS.border}`
+                              }}>
+                                <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary, display: 'block', mb: 0.5 }}>
+                                  최소 구매금액
+                                </Typography>
+                                <Typography variant="body2" fontWeight="600" sx={{ color: DARK_COLORS.text.primary }}>
+                                  {coupon.benefit_condition || coupon.min_purchase_amount || '-'}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          )}
+                          
+                          {/* 최대 할인금액 */}
+                          {coupon.max_discount_amount && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ 
+                                p: 1.5, 
+                                bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5),
+                                borderRadius: 1,
+                                border: `1px solid ${DARK_COLORS.border}`
+                              }}>
+                                <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary, display: 'block', mb: 0.5 }}>
+                                  최대 할인금액
+                                </Typography>
+                                <Typography variant="body2" fontWeight="600" sx={{ color: DARK_COLORS.text.primary }}>
+                                  {coupon.max_discount_amount}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          )}
+                          
+                          {/* 발급 제한 */}
+                          {coupon.coupon_issue_limit && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ 
+                                p: 1.5, 
+                                bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5),
+                                borderRadius: 1,
+                                border: `1px solid ${DARK_COLORS.border}`
+                              }}>
+                                <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary, display: 'block', mb: 0.5 }}>
+                                  발급 제한
+                                </Typography>
+                                <Typography variant="body2" fontWeight="600" sx={{ color: DARK_COLORS.warning }}>
+                                  {coupon.coupon_issue_limit}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          )}
+                          
+                          {/* 중복 사용 */}
+                          {coupon.duplicate_use !== undefined && (
+                            <Grid item xs={12} sm={6}>
+                              <Box sx={{ 
+                                p: 1.5, 
+                                bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5),
+                                borderRadius: 1,
+                                border: `1px solid ${DARK_COLORS.border}`
+                              }}>
+                                <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary, display: 'block', mb: 0.5 }}>
+                                  중복 사용
+                                </Typography>
+                                <Typography variant="body2" fontWeight="600" sx={{ color: coupon.duplicate_use ? DARK_COLORS.success : DARK_COLORS.text.secondary }}>
+                                  {coupon.duplicate_use ? '가능' : '불가'}
+                                </Typography>
+                              </Box>
+                            </Grid>
+                          )}
+                        </Grid>
+                        
+                        {/* 유효기간 */}
+                        {(coupon.benefit_valid_period || coupon.coupon_valid_start || coupon.coupon_valid_end) && (
+                          <Box sx={{ 
+                            mt: 2, 
+                            p: 1.5, 
+                            bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5),
+                            borderRadius: 1,
+                            border: `1px solid ${DARK_COLORS.border}`
+                          }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                              <ScheduleIcon sx={{ color: DARK_COLORS.info, fontSize: '1.25rem' }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary, display: 'block' }}>
+                                  유효기간
+                                </Typography>
+                                <Typography variant="body2" fontWeight="600" sx={{ color: DARK_COLORS.text.primary }}>
+                                  {coupon.benefit_valid_period || 
+                                   `${coupon.coupon_valid_start || '-'} ~ ${coupon.coupon_valid_end || '-'}`}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Box>
+                        )}
+                        
+                        {/* 발급 조건 */}
+                        {coupon.coupon_issue_condition && (
+                          <Box sx={{ 
+                            mt: 1.5, 
+                            p: 1.5, 
+                            bgcolor: alpha(DARK_COLORS.info, 0.1),
+                            borderRadius: 1,
+                            border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`
+                          }}>
+                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontSize: '0.875rem' }}>
+                              <strong>발급 조건:</strong> {coupon.coupon_issue_condition}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {/* 적용 상품 */}
+                        {coupon.target_products && (
+                          <Box sx={{ 
+                            mt: 1.5, 
+                            p: 1.5, 
+                            bgcolor: alpha(DARK_COLORS.success, 0.1),
+                            borderRadius: 1,
+                            border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}`
+                          }}>
+                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontSize: '0.875rem' }}>
+                              <strong>✓ 적용 상품:</strong> {coupon.target_products}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {/* 제외 상품 */}
+                        {coupon.excluded_products && (
+                          <Box sx={{ 
+                            mt: 1.5, 
+                            p: 1.5, 
+                            bgcolor: alpha(DARK_COLORS.warning, 0.1),
+                            borderRadius: 1,
+                            border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}`
+                          }}>
+                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontSize: '0.875rem' }}>
+                              <strong>✗ 제외 상품:</strong> {coupon.excluded_products}
+                            </Typography>
+                          </Box>
+                        )}
+                        
+                        {/* 추가 정보 태그 */}
+                        <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {coupon.coupon_code && (
+                            <Chip 
+                              label={`쿠폰코드: ${coupon.coupon_code}`} 
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(DARK_COLORS.primary, 0.2),
+                                color: DARK_COLORS.primary,
+                                border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`,
+                                fontSize: '0.75rem'
+                              }}
+                            />
+                          )}
+                          {coupon.usage_count !== undefined && (
+                            <Chip 
+                              label={`사용: ${coupon.usage_count}회`} 
+                              size="small"
+                              sx={{
+                                bgcolor: alpha(DARK_COLORS.info, 0.2),
+                                color: DARK_COLORS.info,
+                                border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                                fontSize: '0.75rem'
+                              }}
+                            />
+                          )}
+                          {coupon.coupon_status && (
+                            <Chip 
+                              label={coupon.coupon_status} 
+                              size="small"
+                              sx={{
+                                bgcolor: coupon.coupon_status === '발급가능' 
+                                  ? alpha(DARK_COLORS.success, 0.2) 
+                                  : alpha(DARK_COLORS.text.secondary, 0.2),
+                                color: coupon.coupon_status === '발급가능' 
+                                  ? DARK_COLORS.success 
+                                  : DARK_COLORS.text.secondary,
+                                border: `1px solid ${coupon.coupon_status === '발급가능' 
+                                  ? alpha(DARK_COLORS.success, 0.3) 
+                                  : alpha(DARK_COLORS.text.secondary, 0.3)}`,
+                                fontSize: '0.75rem'
+                              }}
+                            />
+                          )}
+                        </Box>
+                        
+                        {/* 쿠폰 다운로드 버튼 */}
+                        <Button 
+                          variant="contained" 
+                          fullWidth 
+                          sx={{ 
+                            mt: 2, 
+                            py: 1.2, 
+                            bgcolor: DARK_COLORS.secondary,
+                            color: 'white',
+                            fontWeight: 600,
+                            fontSize: '0.9rem',
+                            borderRadius: 1.5,
+                            '&:hover': {
+                              bgcolor: DARK_COLORS.secondary,
+                              opacity: 0.9,
+                            }
+                          }}
+                        >
+                          쿠폰 다운로드
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+              ) : (
+                <Alert severity="info" sx={{ py: 3 }}>
+                  <Typography variant="body1" fontWeight="600">
+                    현재 사용 가능한 쿠폰이 없습니다.
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    새로운 쿠폰이 발급되면 알려드리겠습니다.
+                  </Typography>
                 </Alert>
-              ))}
-          </Box>
-        )}
+              )}
+            </Box>
+          )}
+
+          {/* 💰 혜택 탭 */}
+          {tabValue === 2 && (
+            <Box>
+              <Alert severity="info" icon={<LocalOfferIcon />}>
+                <Typography variant="body1" fontWeight="bold" gutterBottom>
+                  혜택 정보는 하단의 "혜택 정보" 섹션에서 확인하실 수 있습니다.
+                </Typography>
+                <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                  할인, 사은품, 쿠폰, 배송 혜택 등 모든 혜택 정보를 한눈에 확인하세요.
+                </Typography>
+              </Alert>
+              
+              {/* 혜택 요약 */}
+              {(() => {
+                const _v_total_benefits = (liveData.benefits?.discounts?.length || 0) + 
+                                         (liveData.benefits?.gifts?.length || 0) + 
+                                         (liveData.benefits?.coupons?.length || 0) + 
+                                         (liveData.benefits?.shipping?.length || 0) +
+                                         (liveData.benefits?.delivery?.length || 0) +
+                                         (liveData.benefits?.point_details?.length || 0);
+                
+                return (
+                  <Box sx={{ mt: 3 }}>
+                    <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }}>
+                      혜택 요약
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ 
+                          textAlign: 'center', 
+                          p: 2, 
+                          bgcolor: DARK_COLORS.cardBg,
+                          border: `1px solid ${DARK_COLORS.border}`,
+                          borderRadius: 2
+                        }}>
+                          <LocalOfferIcon sx={{ fontSize: 32, color: DARK_COLORS.error, mb: 1 }} />
+                          <Typography variant="h4" sx={{ color: DARK_COLORS.error, fontWeight: 700 }}>
+                            {liveData.benefits?.discounts?.length || 0}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>할인 혜택</Typography>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ 
+                          textAlign: 'center', 
+                          p: 2, 
+                          bgcolor: DARK_COLORS.cardBg,
+                          border: `1px solid ${DARK_COLORS.border}`,
+                          borderRadius: 2
+                        }}>
+                          <CardGiftcardIcon sx={{ fontSize: 32, color: DARK_COLORS.success, mb: 1 }} />
+                          <Typography variant="h4" sx={{ color: DARK_COLORS.success, fontWeight: 700 }}>
+                            {liveData.benefits?.gifts?.length || 0}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>사은품</Typography>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ 
+                          textAlign: 'center', 
+                          p: 2, 
+                          bgcolor: DARK_COLORS.cardBg,
+                          border: `1px solid ${DARK_COLORS.border}`,
+                          borderRadius: 2
+                        }}>
+                          <LocalOfferIcon sx={{ fontSize: 32, color: DARK_COLORS.secondary, mb: 1 }} />
+                          <Typography variant="h4" sx={{ color: DARK_COLORS.secondary, fontWeight: 700 }}>
+                            {liveData.benefits?.coupons?.length || 0}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>쿠폰</Typography>
+                        </Card>
+                      </Grid>
+                      <Grid item xs={6} sm={3}>
+                        <Card sx={{ 
+                          textAlign: 'center', 
+                          p: 2, 
+                          bgcolor: DARK_COLORS.cardBg,
+                          border: `1px solid ${DARK_COLORS.border}`,
+                          borderRadius: 2
+                        }}>
+                          <LocalShippingIcon sx={{ fontSize: 32, color: DARK_COLORS.info, mb: 1 }} />
+                          <Typography variant="h4" sx={{ color: DARK_COLORS.info, fontWeight: 700 }}>
+                            {(liveData.benefits?.shipping?.length || 0) + (liveData.benefits?.delivery?.length || 0)}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>배송 혜택</Typography>
+                        </Card>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                );
+              })()}
+            </Box>
+          )}
+        </Box>
       </Paper>
 
       {/* ========== 4) 혜택(Promotion) 구조 ========== */}
-      <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ mt: 4, mb: 2 }}>
-        혜택 정보
-      </Typography>
-
-      {/* 4-a) 할인 관련 */}
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <LocalOfferIcon sx={{ mr: 1, color: 'error.main' }} /> 할인 혜택 ({liveData.benefits.discounts.length}개)
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
+      {(() => {
+        const _v_total_benefits = (liveData.benefits?.discounts?.length || 0) + 
+                                 (liveData.benefits?.gifts?.length || 0) + 
+                                 (liveData.benefits?.coupons?.length || 0) + 
+                                 (liveData.benefits?.shipping?.length || 0) +
+                                 (liveData.benefits?.delivery?.length || 0) +
+                                 (liveData.benefits?.point_details?.length || 0);
         
-        {liveData.benefits.discounts.map((discount, index) => (
-          <Card key={index} sx={{ mb: 1.5, backgroundColor: '#fff3f3' }}>
-            <CardContent>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Chip label={discount.discount_type} color="error" size="small" />
-                <Typography variant="h6" color="error" fontWeight="bold">
-                  {discount.discount_value}
-                </Typography>
-              </Stack>
-              <Typography variant="body2">{discount.discount_detail}</Typography>
-              {discount.conditions && (
-                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                  조건: {discount.conditions}
-                </Typography>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+        return (
+          <>
+            <Typography variant="h5" gutterBottom fontWeight="bold" sx={{ color: '#FFFFFF', mt: 4, mb: 2 }} sx={{ color: DARK_COLORS.text.primary }}>
+              혜택 정보 ({_v_total_benefits}건)
+            </Typography>
+
+            {/* 4-a) 할인 관련 */}
+      <Paper sx={{ p: 3, mb: 2, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ color: '#FFFFFF', display: 'flex', alignItems: 'center' }}>
+          <LocalOfferIcon sx={{ mr: 1, color: '#FFFFFF' }} /> 할인 혜택 ({liveData.benefits?.discounts?.length || 0}개)
+        </Typography>
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+        
+        {liveData.benefits?.discounts && liveData.benefits.discounts.length > 0 ? (
+          liveData.benefits.discounts.map((discount, index) => (
+            <Card key={index} sx={{ mb: 1.5, bgcolor: alpha(DARK_COLORS.error, 0.1), border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }}>
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <Chip 
+                    label={discount.benefit_name || discount.discount_type || discount.discount_name || '할인'} 
+                    size="small"
+                    sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }}
+                  />
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: DARK_COLORS.error }}>
+                    {discount.benefit_detail || discount.discount_value || discount.discount_detail || '-'}
+                  </Typography>
+                </Stack>
+                <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>{discount.benefit_detail || discount.discount_detail || discount.discount_value || discount.conditions || '-'}</Typography>
+                {(discount.benefit_condition || discount.conditions) && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                    조건: {discount.benefit_condition || discount.conditions}
+                  </Typography>
+                )}
+                {discount.benefit_valid_period && (
+                  <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                    유효기간: {discount.benefit_valid_period}
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>할인 혜택이 없습니다.</Alert>
+        )}
       </Paper>
 
       {/* 4-b) 사은품(GWP) */}
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <CardGiftcardIcon sx={{ mr: 1, color: 'success.main' }} /> 사은품 ({liveData.benefits.gifts.length}개)
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: '#FFFFFF' }}>
+          <CardGiftcardIcon sx={{ mr: 1, color: '#FFFFFF' }} /> 사은품 ({liveData.benefits?.gifts?.length || 0}개)
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
-        {liveData.benefits.gifts.map((gift, index) => (
-          <Card key={index} sx={{ mb: 1.5, backgroundColor: '#f0f9f4' }}>
-            <CardContent>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Chip label={gift.gift_type} color="success" size="small" />
-                {gift.quantity_limit_text && (
-                  <Chip label={gift.quantity_limit_text} color="warning" size="small" />
-                )}
-              </Stack>
-              <Typography variant="body1" fontWeight="bold">{gift.gift_name}</Typography>
-              {gift.gift_condition && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  조건: {gift.gift_condition}
+        {liveData.benefits?.gifts && liveData.benefits.gifts.length > 0 ? (
+          liveData.benefits.gifts.map((gift, index) => (
+            <Card key={index} sx={{ mb: 1.5, bgcolor: alpha(DARK_COLORS.success, 0.1), border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}` }}>
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <Chip label={gift.benefit_name || gift.gift_type || gift.gift_name || '사은품'} sx={{ bgcolor: alpha(DARK_COLORS.success, 0.2), color: DARK_COLORS.success, border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}` }} size="small" />
+                  {(gift.quantity_limit || gift.quantity_limit_text) && (
+                    <Chip label={gift.quantity_limit || gift.quantity_limit_text} sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }} size="small" />
+                  )}
+                </Stack>
+                <Typography variant="body1" fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }}>
+                  {gift.benefit_name || gift.gift_name || '사은품'}
                 </Typography>
-              )}
-              {gift.gift_quantity && (
-                <Typography variant="caption">수량: {gift.gift_quantity}개</Typography>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+                <Typography variant="body2" sx={{ mt: 0.5, color: DARK_COLORS.text.primary }}>
+                  {gift.benefit_detail || gift.gift_detail || gift.gift_condition || '-'}
+                </Typography>
+                {(gift.benefit_condition || gift.gift_condition) && (
+                  <Typography variant="body2" sx={{ mt: 0.5, color: DARK_COLORS.text.secondary }}>
+                    조건: {gift.benefit_condition || gift.gift_condition}
+                  </Typography>
+                )}
+                {gift.gift_quantity && (
+                  <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                    수량: {gift.gift_quantity}개
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>사은품이 없습니다.</Alert>
+        )}
       </Paper>
 
       {/* 4-c) 쿠폰/적립 */}
-      <Paper sx={{ p: 3, mb: 2 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          🎟️ 쿠폰/적립 ({liveData.benefits.coupons.length}개)
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: '#FFFFFF' }}>
+          🎟️ 쿠폰/적립 ({liveData.benefits?.coupons?.length || 0}개)
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
-        {liveData.benefits.coupons.map((coupon, index) => (
-          <Card key={index} sx={{ mb: 1.5, backgroundColor: '#f9f6ff' }}>
-            <CardContent>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Chip label={coupon.coupon_type} color="secondary" size="small" />
-                <Typography variant="h6" color="secondary" fontWeight="bold">
-                  {coupon.coupon_value}
+        {liveData.benefits?.coupons && liveData.benefits.coupons.length > 0 ? (
+          liveData.benefits.coupons.map((coupon, index) => (
+            <Card key={index} sx={{ mb: 1.5, bgcolor: alpha(DARK_COLORS.secondary, 0.1), border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}` }}>
+              <CardContent>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                  <Chip 
+                    label={coupon.benefit_name || coupon.coupon_type || '쿠폰'} 
+                    size="small"
+                    sx={{
+                      bgcolor: alpha(DARK_COLORS.secondary, 0.2),
+                      color: DARK_COLORS.secondary,
+                      border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                      fontWeight: 600
+                    }}
+                  />
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: DARK_COLORS.secondary }}>
+                    {coupon.benefit_detail || coupon.coupon_value || '-'}
+                  </Typography>
+                </Stack>
+                <Typography variant="body1" fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }}>
+                  {coupon.benefit_name || coupon.coupon_name || '쿠폰'}
                 </Typography>
-              </Stack>
-              <Typography variant="body1" fontWeight="bold">{coupon.coupon_name}</Typography>
-              <Grid container spacing={1} sx={{ mt: 1 }}>
-                {coupon.issue_condition && (
-                  <Grid item xs={12}>
-                    <Typography variant="caption">발급: {coupon.issue_condition}</Typography>
-                  </Grid>
-                )}
-                {coupon.usage_condition && (
-                  <Grid item xs={12}>
-                    <Typography variant="caption">사용: {coupon.usage_condition}</Typography>
-                  </Grid>
-                )}
-                {coupon.reward_detail && (
-                  <Grid item xs={12}>
-                    <Typography variant="caption" color="primary">{coupon.reward_detail}</Typography>
-                  </Grid>
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
-        ))}
+                <Grid container spacing={1} sx={{ mt: 1 }}>
+                  {(coupon.benefit_condition || coupon.issue_condition) && (
+                    <Grid item xs={12}>
+                      <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                        조건: {coupon.benefit_condition || coupon.issue_condition}
+                      </Typography>
+                    </Grid>
+                  )}
+                  {coupon.usage_condition && (
+                    <Grid item xs={12}>
+                      <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                        사용: {coupon.usage_condition}
+                      </Typography>
+                    </Grid>
+                  )}
+                  {(coupon.benefit_valid_period || coupon.reward_detail) && (
+                    <Grid item xs={12}>
+                      <Typography variant="caption" sx={{ color: DARK_COLORS.primary, fontWeight: 600 }}>
+                        {coupon.benefit_valid_period || coupon.reward_detail}
+                      </Typography>
+                    </Grid>
+                  )}
+                </Grid>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>쿠폰이 없습니다.</Alert>
+        )}
       </Paper>
 
       {/* 4-d) 배송 혜택 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <LocalShippingIcon sx={{ mr: 1, color: 'info.main' }} /> 배송 혜택 ({liveData.benefits.shipping.length}개)
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: '#FFFFFF' }}>
+          <LocalShippingIcon sx={{ mr: 1, color: '#FFFFFF' }} /> 배송 혜택 ({liveData.benefits?.delivery?.length || liveData.benefits?.shipping?.length || 0}개)
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
-        {liveData.benefits.shipping.map((shipping, index) => (
-          <Alert key={index} severity="info" sx={{ mb: 1 }}>
-            <Typography variant="body1" fontWeight="bold">{shipping.shipping_benefit}</Typography>
-            <Typography variant="body2">{shipping.shipping_detail}</Typography>
-            {shipping.shipping_condition && (
-              <Typography variant="caption">조건: {shipping.shipping_condition}</Typography>
-            )}
-          </Alert>
-        ))}
+        {(liveData.benefits?.delivery && liveData.benefits.delivery.length > 0) || 
+         (liveData.benefits?.shipping && liveData.benefits.shipping.length > 0) ? (
+          (liveData.benefits?.delivery || liveData.benefits?.shipping || []).map((shipping, index) => (
+            <Alert key={index} severity="info" sx={{ mb: 1, bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+              <Typography variant="body1" fontWeight="bold">
+                {shipping.benefit_name || shipping.shipping_benefit || '배송 혜택'}
+              </Typography>
+              <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                {shipping.benefit_detail || shipping.shipping_detail || '-'}
+              </Typography>
+              {(shipping.benefit_condition || shipping.shipping_condition) && (
+                <Typography variant="caption">조건: {shipping.benefit_condition || shipping.shipping_condition}</Typography>
+              )}
+            </Alert>
+          ))
+        ) : (
+          <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>배송 혜택이 없습니다.</Alert>
+        )}
       </Paper>
+          </>
+        );
+      })()}
 
       {/* ========== 5) 중복 적용 정책 (Risk Point) ========== */}
-      <Paper sx={{ p: 3, mb: 3, backgroundColor: '#fff8e1' }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
-          <WarningIcon sx={{ mr: 1, color: 'warning.main' }} /> 중복 적용 정책 (Risk Point)
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+          <WarningIcon sx={{ mr: 1, color: DARK_COLORS.warning }} /> 중복 적용 정책 (Risk Point)
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
         <Grid container spacing={2}>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">쿠폰 중복</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>쿠폰 중복</Typography>
             <Chip 
               label={liveData.duplicate_policy?.coupon_duplicate || liveData.policy?.coupon_duplicate || '정보 없음'} 
-              color={(liveData.duplicate_policy?.coupon_duplicate || liveData.policy?.coupon_duplicate) === '가능' ? 'success' : 'error'} 
-              size="small" 
+              size="small"
+              sx={{
+                bgcolor: (liveData.duplicate_policy?.coupon_duplicate || liveData.policy?.coupon_duplicate) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.2) 
+                  : alpha(DARK_COLORS.error, 0.2),
+                color: (liveData.duplicate_policy?.coupon_duplicate || liveData.policy?.coupon_duplicate) === '가능' 
+                  ? DARK_COLORS.success 
+                  : DARK_COLORS.error,
+                border: `1px solid ${(liveData.duplicate_policy?.coupon_duplicate || liveData.policy?.coupon_duplicate) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.3) 
+                  : alpha(DARK_COLORS.error, 0.3)}`
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">적립 중복</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>적립 중복</Typography>
             <Chip 
               label={liveData.duplicate_policy?.point_duplicate || liveData.policy?.reward_duplicate || '정보 없음'} 
-              color={(liveData.duplicate_policy?.point_duplicate || liveData.policy?.reward_duplicate) === '가능' ? 'success' : 'error'} 
-              size="small" 
+              size="small"
+              sx={{
+                bgcolor: (liveData.duplicate_policy?.point_duplicate || liveData.policy?.reward_duplicate) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.2) 
+                  : alpha(DARK_COLORS.error, 0.2),
+                color: (liveData.duplicate_policy?.point_duplicate || liveData.policy?.reward_duplicate) === '가능' 
+                  ? DARK_COLORS.success 
+                  : DARK_COLORS.error,
+                border: `1px solid ${(liveData.duplicate_policy?.point_duplicate || liveData.policy?.reward_duplicate) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.3) 
+                  : alpha(DARK_COLORS.error, 0.3)}`
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">타행사 중복</Typography>
-            <Typography variant="body2">{liveData.duplicate_policy?.other_promotion_duplicate || liveData.policy?.other_event_combination || '정보 없음'}</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>타행사 중복</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>{liveData.duplicate_policy?.other_promotion_duplicate || liveData.policy?.other_event_combination || '정보 없음'}</Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="body2" color="text.secondary">임직원 할인 적용</Typography>
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>임직원 할인 적용</Typography>
             <Chip 
               label={liveData.duplicate_policy?.employee_discount || liveData.policy?.employee_discount_applicable || '정보 없음'} 
-              color={(liveData.duplicate_policy?.employee_discount || liveData.policy?.employee_discount_applicable) === '가능' ? 'success' : 'error'} 
-              size="small" 
+              size="small"
+              sx={{
+                bgcolor: (liveData.duplicate_policy?.employee_discount || liveData.policy?.employee_discount_applicable) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.2) 
+                  : alpha(DARK_COLORS.error, 0.2),
+                color: (liveData.duplicate_policy?.employee_discount || liveData.policy?.employee_discount_applicable) === '가능' 
+                  ? DARK_COLORS.success 
+                  : DARK_COLORS.error,
+                border: `1px solid ${(liveData.duplicate_policy?.employee_discount || liveData.policy?.employee_discount_applicable) === '가능' 
+                  ? alpha(DARK_COLORS.success, 0.3) 
+                  : alpha(DARK_COLORS.error, 0.3)}`
+              }}
             />
           </Grid>
           <Grid item xs={12}>
-            <Alert severity="warning">
-              <Typography variant="body2">{liveData.duplicate_policy?.duplicate_note || liveData.policy?.policy_detail || '중복 적용 정책을 확인해주세요.'}</Typography>
+            <Alert severity="warning" sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+              <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>{liveData.duplicate_policy?.duplicate_note || liveData.policy?.policy_detail || '중복 적용 정책을 확인해주세요.'}</Typography>
             </Alert>
           </Grid>
         </Grid>
       </Paper>
 
       {/* ========== 6) 제외/제한 사항 ========== */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
           ⚠️ 제외/제한 사항
         </Typography>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
         
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Typography variant="body2" fontWeight="bold">제외 상품</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>
               {Array.isArray(liveData.restrictions?.excluded_products) 
                 ? liveData.restrictions.excluded_products.join(', ') || '없음'
                 : liveData.restrictions?.excluded_products || '없음'}
@@ -438,7 +1381,7 @@ const LiveBroadcastDetail = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body2" fontWeight="bold">채널 제한</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>
               {Array.isArray(liveData.restrictions?.channel_restrictions) 
                 ? liveData.restrictions.channel_restrictions.join(', ') || '없음'
                 : liveData.restrictions?.channel_restriction || '없음'}
@@ -446,7 +1389,7 @@ const LiveBroadcastDetail = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body2" fontWeight="bold">결제수단 제한</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>
               {Array.isArray(liveData.restrictions?.payment_restrictions) 
                 ? liveData.restrictions.payment_restrictions.join(', ') || '없음'
                 : liveData.restrictions?.payment_restriction || '없음'}
@@ -454,7 +1397,7 @@ const LiveBroadcastDetail = () => {
           </Grid>
           <Grid item xs={12}>
             <Typography variant="body2" fontWeight="bold">지역/배송 제한</Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>
               {Array.isArray(liveData.restrictions?.region_restrictions) 
                 ? liveData.restrictions.region_restrictions.join(', ') || '없음'
                 : liveData.restrictions?.region_restriction || '없음'}
@@ -464,8 +1407,8 @@ const LiveBroadcastDetail = () => {
               ? liveData.restrictions.other_restrictions.length > 0
               : liveData.restrictions?.other_restrictions) && (
             <Grid item xs={12}>
-              <Alert severity="warning">
-                <Typography variant="body2">
+              <Alert severity="warning" sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
                   {Array.isArray(liveData.restrictions.other_restrictions) 
                     ? liveData.restrictions.other_restrictions.join(', ')
                     : liveData.restrictions.other_restrictions}
@@ -477,139 +1420,918 @@ const LiveBroadcastDetail = () => {
       </Paper>
 
       {/* ========== 7) 라이브 특화 정보 (STT 기반) ========== */}
-      <Accordion sx={{ mb: 2 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" fontWeight="bold">
-            <ScheduleIcon sx={{ mr: 1, verticalAlign: 'middle' }} />
-            라이브 특화 정보 (STT 기반)
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          {/* 핵심 멘트 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>핵심 세일즈 멘트</Typography>
-          {(liveData.live_specific?.key_mentions || liveData.stt_info?.key_message || []).map((message, index) => (
-            <Alert key={index} severity="info" sx={{ mb: 1 }}>
-              {message}
+      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary, mb: 3 }}>
+          <ScheduleIcon sx={{ mr: 1, color: DARK_COLORS.primary }} />
+          라이브 특화 정보 (STT 기반)
+        </Typography>
+        
+        <Box>
+          {/* 디버깅: STT 정보 확인 (개발 환경에서만) */}
+          {process.env.NODE_ENV === 'development' && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <Typography variant="caption" component="div">
+                <strong>🔍 디버그 정보:</strong>
+                <div style={{ marginTop: '8px', fontSize: '0.75rem' }}>
+                  <div>live_specific: {liveData.live_specific ? '✅ 있음' : '❌ 없음'}</div>
+                  <div>stt_info: {liveData.stt_info ? '✅ 있음' : '❌ 없음'}</div>
+                  {liveData.stt_info && (
+                    <div style={{ marginTop: '4px', paddingLeft: '12px' }}>
+                      <div>key_mentions: {Array.isArray(liveData.stt_info.key_mentions) ? `✅ ${liveData.stt_info.key_mentions.length}개` : '❌ 없음'}</div>
+                      <div>broadcast_qa: {Array.isArray(liveData.stt_info.broadcast_qa) ? `✅ ${liveData.stt_info.broadcast_qa.length}개` : '❌ 없음'}</div>
+                      <div>timeline_summary: {Array.isArray(liveData.stt_info.timeline_summary) ? `✅ ${liveData.stt_info.timeline_summary.length}개` : '❌ 없음'}</div>
+                    </div>
+                  )}
+                  {liveData.live_specific && (
+                    <div style={{ marginTop: '4px', paddingLeft: '12px' }}>
+                      <div>key_mentions: {Array.isArray(liveData.live_specific.key_mentions) ? `✅ ${liveData.live_specific.key_mentions.length}개` : '❌ 없음'}</div>
+                      <div>broadcast_qa: {Array.isArray(liveData.live_specific.broadcast_qa) ? `✅ ${liveData.live_specific.broadcast_qa.length}개` : '❌ 없음'}</div>
+                      <div>timeline: {Array.isArray(liveData.live_specific.timeline) ? `✅ ${liveData.live_specific.timeline.length}개` : '❌ 없음'}</div>
+                    </div>
+                  )}
+                </div>
+              </Typography>
             </Alert>
-          ))}
-          {!(liveData.live_specific?.key_mentions || liveData.stt_info?.key_message)?.length && (
-            <Typography variant="body2" color="text.secondary">정보 없음</Typography>
           )}
+          
+          {/* 핵심 멘트 */}
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: DARK_COLORS.text.primary }}>핵심 세일즈 멘트</Typography>
+          {(() => {
+            // 여러 경로에서 데이터 확인
+            const _v_key_mentions = liveData.live_specific?.key_mentions || 
+                                   liveData.stt_info?.key_mentions || 
+                                   liveData.stt_info?.key_message || 
+                                   [];
+            
+            if (Array.isArray(_v_key_mentions) && _v_key_mentions.length > 0) {
+              return _v_key_mentions.map((message, index) => (
+                <Alert key={index} severity="info" sx={{ mb: 1, bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                  {typeof message === 'string' ? message : JSON.stringify(message)}
+                </Alert>
+              ));
+            } else {
+              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
+            }
+          })()}
           
           {/* 방송 QA */}
           <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 3 }}>시청자 QA</Typography>
-          {(liveData.live_specific?.broadcast_qa || liveData.stt_info?.broadcast_qa || []).map((qa, index) => (
-            <Card key={index} sx={{ mb: 1 }}>
-              <CardContent>
-                <Typography variant="body2" fontWeight="bold" color="primary">Q. {qa.question}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>A. {qa.answer}</Typography>
-              </CardContent>
-            </Card>
-          ))}
-          {!(liveData.live_specific?.broadcast_qa || liveData.stt_info?.broadcast_qa)?.length && (
-            <Typography variant="body2" color="text.secondary">정보 없음</Typography>
-          )}
+          {(() => {
+            // 여러 경로에서 데이터 확인
+            const _v_broadcast_qa = liveData.live_specific?.broadcast_qa || 
+                                    liveData.stt_info?.broadcast_qa || 
+                                    [];
+            
+            if (Array.isArray(_v_broadcast_qa) && _v_broadcast_qa.length > 0) {
+              return _v_broadcast_qa.map((qa, index) => {
+                // qa가 객체인지 문자열인지 확인
+                const _v_question = typeof qa === 'object' ? qa.question : (typeof qa === 'string' ? qa : '');
+                const _v_answer = typeof qa === 'object' ? qa.answer : '';
+                
+                return (
+                  <Card key={index} sx={{ mb: 1, bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}` }}>
+                    <CardContent>
+                      <Typography variant="body2" fontWeight="bold" sx={{ color: DARK_COLORS.primary }}>Q. {_v_question}</Typography>
+                      {_v_answer && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>A. {_v_answer}</Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              });
+            } else {
+              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
+            }
+          })()}
           
           {/* 타임라인 */}
           <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 3 }}>방송 타임라인</Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell width="100px">시간</TableCell>
-                  <TableCell>내용</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(liveData.live_specific?.timeline || liveData.stt_info?.timeline_summary || []).map((timeline, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{timeline.time}</TableCell>
-                    <TableCell>{timeline.content || timeline.description}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {!(liveData.live_specific?.timeline || liveData.stt_info?.timeline_summary)?.length && (
-            <Typography variant="body2" color="text.secondary">정보 없음</Typography>
-          )}
-        </AccordionDetails>
-      </Accordion>
+          {(() => {
+            // 여러 경로에서 데이터 확인
+            const _v_timeline = liveData.live_specific?.timeline || 
+                               liveData.live_specific?.timeline_summary ||
+                               liveData.stt_info?.timeline_summary || 
+                               [];
+            
+            if (Array.isArray(_v_timeline) && _v_timeline.length > 0) {
+              return (
+                <TableContainer sx={{ bgcolor: DARK_COLORS.cardBg }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow>
+                        <TableCell width="100px">시간</TableCell>
+                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>내용</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {_v_timeline.map((timeline, index) => {
+                        const _v_time = typeof timeline === 'object' ? timeline.time : '';
+                        const _v_content = typeof timeline === 'object' ? (timeline.content || timeline.description) : timeline;
+                        
+                        return (
+                          <TableRow key={index}>
+                            <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>{_v_time || '-'}</TableCell>
+                            <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>{_v_content || '-'}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              );
+            } else {
+              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
+            }
+          })()}
+        </Box>
+      </Paper>
 
       {/* ========== 8) CS 응대용 정보 ========== */}
-      <Accordion sx={{ mb: 4 }}>
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="h6" fontWeight="bold">
-            💬 CS 응대용 정보
+      <Paper sx={{ p: 3, mb: 4, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary, mb: 3 }}>
+          <InfoIcon sx={{ mr: 1, color: DARK_COLORS.info }} />
+          💬 CS 응대용 정보
+        </Typography>
+        
+        <Box>
+          {/* 예상 질문 테이블 */}
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            ❓ 예상 고객 질문
           </Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          {/* 예상 질문 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>예상 고객 질문</Typography>
-          <Box sx={{ mb: 3 }}>
-            {(liveData.cs_info?.expected_questions || liveData.cs_response?.expected_questions || []).map((question, index) => (
-              <Chip key={index} label={question} sx={{ mr: 1, mb: 1 }} />
-            ))}
-            {!(liveData.cs_info?.expected_questions || liveData.cs_response?.expected_questions)?.length && (
-              <Typography variant="body2" color="text.secondary">정보 없음</Typography>
-            )}
+          <Box sx={{ mb: 4 }}>
+            {(() => {
+              // CS 정보에서 예상 질문 추출 및 파싱
+              let _v_expected_questions = liveData.cs_info?.expected_questions || liveData.cs_response?.expected_questions || [];
+              
+              // 문자열인 경우 JSON 파싱 시도
+              if (typeof _v_expected_questions === 'string') {
+                try {
+                  _v_expected_questions = JSON.parse(_v_expected_questions);
+                } catch (e) {
+                  console.warn('예상 질문 파싱 실패:', e);
+                  _v_expected_questions = [];
+                }
+              }
+              
+              // 배열이 아닌 경우 빈 배열로 초기화
+              if (!Array.isArray(_v_expected_questions)) {
+                _v_expected_questions = [];
+              }
+              
+              // 데이터가 없는 경우
+              if (_v_expected_questions.length === 0) {
+                return (
+                  <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}` }}>
+                    <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>예상 고객 질문 정보가 없습니다.</Typography>
+                  </Alert>
+                );
+              }
+              
+              // 최대 10개까지만 표시
+              const _v_limited_questions = _v_expected_questions.slice(0, 10);
+              
+              // 테이블 형태로 표시
+              return (
+                <TableContainer component={Paper} sx={{ boxShadow: 2, bgcolor: DARK_COLORS.cardBg }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: DARK_COLORS.cardHoverBg }}>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '60px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>순번</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '100px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>카테고리</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>질문 내용</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '80px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>빈도</TableCell>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '80px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>우선순위</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {_v_limited_questions.map((question, index) => {
+                        // 질문이 문자열인 경우 JSON 파싱 시도
+                        let _v_parsed_question = question;
+                        if (typeof question === 'string') {
+                          try {
+                            _v_parsed_question = JSON.parse(question);
+                          } catch (e) {
+                            // 파싱 실패시 원본 문자열 사용
+                            _v_parsed_question = { question: question };
+                          }
+                        }
+                        
+                        // 질문이 객체인 경우
+                        if (typeof _v_parsed_question === 'object' && _v_parsed_question !== null) {
+                          const _v_category = _v_parsed_question.category || _v_parsed_question.question_category || '일반';
+                          const _v_question_text = _v_parsed_question.question || '질문 내용 없음';
+                          const _v_frequency = _v_parsed_question.frequency || '-';
+                          const _v_priority = _v_parsed_question.priority || 0;
+                          
+                          // 우선순위에 따른 배경색 (다크 테마)
+                          const _v_row_bg = _v_priority <= 3 
+                            ? alpha(DARK_COLORS.error, 0.1) 
+                            : _v_priority <= 7 
+                            ? alpha(DARK_COLORS.warning, 0.1) 
+                            : DARK_COLORS.cardBg;
+                          
+                          return (
+                            <TableRow 
+                              key={index}
+                              sx={{ 
+                                backgroundColor: _v_row_bg,
+                                '&:hover': { 
+                                  backgroundColor: _v_priority <= 3 
+                                    ? alpha(DARK_COLORS.error, 0.2) 
+                                    : _v_priority <= 7 
+                                    ? alpha(DARK_COLORS.warning, 0.2) 
+                                    : DARK_COLORS.cardHoverBg,
+                                  transition: 'background-color 0.2s'
+                                }
+                              }}
+                            >
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={index + 1} 
+                                  size="small"
+                                  sx={{ 
+                                    fontWeight: 'bold', 
+                                    minWidth: 35,
+                                    bgcolor: _v_priority <= 3 
+                                      ? alpha(DARK_COLORS.error, 0.2) 
+                                      : _v_priority <= 7 
+                                      ? alpha(DARK_COLORS.warning, 0.2) 
+                                      : alpha(DARK_COLORS.info, 0.2),
+                                    color: _v_priority <= 3 
+                                      ? DARK_COLORS.error 
+                                      : _v_priority <= 7 
+                                      ? DARK_COLORS.warning 
+                                      : DARK_COLORS.info,
+                                    border: `1px solid ${_v_priority <= 3 
+                                      ? alpha(DARK_COLORS.error, 0.3) 
+                                      : _v_priority <= 7 
+                                      ? alpha(DARK_COLORS.warning, 0.3) 
+                                      : alpha(DARK_COLORS.info, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={_v_category} 
+                                  size="small"
+                                  sx={{
+                                    bgcolor: alpha(DARK_COLORS.primary, 0.2),
+                                    color: DARK_COLORS.primary,
+                                    border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                                <Typography variant="body2" sx={{ 
+                                  fontWeight: _v_priority <= 5 ? 'bold' : 'normal',
+                                  color: DARK_COLORS.text.primary
+                                }}>
+                                  {_v_question_text}
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={_v_frequency} 
+                                  size="small"
+                                  sx={{
+                                    bgcolor: _v_frequency === 'high' 
+                                      ? alpha(DARK_COLORS.error, 0.2) 
+                                      : _v_frequency === 'medium' 
+                                      ? alpha(DARK_COLORS.warning, 0.2) 
+                                      : alpha(DARK_COLORS.info, 0.2),
+                                    color: _v_frequency === 'high' 
+                                      ? DARK_COLORS.error 
+                                      : _v_frequency === 'medium' 
+                                      ? DARK_COLORS.warning 
+                                      : DARK_COLORS.info,
+                                    border: `1px solid ${_v_frequency === 'high' 
+                                      ? alpha(DARK_COLORS.error, 0.3) 
+                                      : _v_frequency === 'medium' 
+                                      ? alpha(DARK_COLORS.warning, 0.3) 
+                                      : alpha(DARK_COLORS.info, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={_v_priority} 
+                                  size="small"
+                                  sx={{ 
+                                    fontWeight: 'bold', 
+                                    minWidth: 35,
+                                    bgcolor: _v_priority <= 3 
+                                      ? alpha(DARK_COLORS.error, 0.2) 
+                                      : _v_priority <= 7 
+                                      ? alpha(DARK_COLORS.warning, 0.2) 
+                                      : alpha(DARK_COLORS.success, 0.2),
+                                    color: _v_priority <= 3 
+                                      ? DARK_COLORS.error 
+                                      : _v_priority <= 7 
+                                      ? DARK_COLORS.warning 
+                                      : DARK_COLORS.success,
+                                    border: `1px solid ${_v_priority <= 3 
+                                      ? alpha(DARK_COLORS.error, 0.3) 
+                                      : _v_priority <= 7 
+                                      ? alpha(DARK_COLORS.warning, 0.3) 
+                                      : alpha(DARK_COLORS.success, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        
+                        // 질문이 문자열인 경우
+                        return (
+                          <TableRow key={index} sx={{ backgroundColor: DARK_COLORS.cardBg }}>
+                            <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                              <Chip 
+                                label={index + 1} 
+                                size="small"
+                                sx={{
+                                  bgcolor: alpha(DARK_COLORS.primary, 0.2),
+                                  color: DARK_COLORS.primary,
+                                  border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, borderColor: DARK_COLORS.border }}>-</TableCell>
+                            <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                              <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                                {typeof question === 'string' ? question : JSON.stringify(question)}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, borderColor: DARK_COLORS.border }}>-</TableCell>
+                            <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, borderColor: DARK_COLORS.border }}>-</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              );
+            })()}
           </Box>
           
-          {/* 응답 스크립트 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>CS 응답 스크립트</Typography>
-          {(liveData.cs_info?.response_scripts || liveData.cs_response?.response_scripts || []).map((script, index) => (
-            <Card key={index} sx={{ mb: 2, backgroundColor: '#f5f5f5' }}>
-              <CardContent>
-                {typeof script === 'string' ? (
-                  <Typography variant="body2">
-                    {index + 1}. {script}
-                  </Typography>
-                ) : (
-                  <>
-                    <Typography variant="body2" fontWeight="bold" color="primary">
-                      Q. {script.question}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      A. {script.answer}
-                    </Typography>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-          {!(liveData.cs_info?.response_scripts || liveData.cs_response?.response_scripts)?.length && (
-            <Typography variant="body2" color="text.secondary">정보 없음</Typography>
-          )}
+          {/* 응답 스크립트 테이블 */}
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            📝 CS 응답 스크립트
+          </Typography>
+          <Box sx={{ mb: 4 }}>
+            {(() => {
+              // CS 정보에서 응답 스크립트 추출 및 파싱
+              let _v_response_scripts = liveData.cs_info?.response_scripts || liveData.cs_response?.response_scripts || [];
+              
+              // 문자열인 경우 JSON 파싱 시도
+              if (typeof _v_response_scripts === 'string') {
+                try {
+                  _v_response_scripts = JSON.parse(_v_response_scripts);
+                } catch (e) {
+                  console.warn('응답 스크립트 파싱 실패:', e);
+                  _v_response_scripts = [];
+                }
+              }
+              
+              // 배열이 아닌 경우 빈 배열로 초기화
+              if (!Array.isArray(_v_response_scripts)) {
+                _v_response_scripts = [];
+              }
+              
+              // 데이터가 없는 경우
+              if (_v_response_scripts.length === 0) {
+                return (
+                  <Alert severity="info" sx={{ bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}` }}>
+                    <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>CS 응답 스크립트 정보가 없습니다.</Typography>
+                  </Alert>
+                );
+              }
+              
+              // 최대 10개까지만 표시
+              const _v_limited_scripts = _v_response_scripts.slice(0, 10);
+              
+              // 테이블 형태로 표시
+              return (
+                <TableContainer component={Paper} sx={{ boxShadow: 2, bgcolor: DARK_COLORS.cardBg }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: DARK_COLORS.cardHoverBg }}>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '60px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>순번</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', width: '40%', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>질문</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>답변</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {_v_limited_scripts.map((script, index) => {
+                        // 스크립트가 문자열인 경우 JSON 파싱 시도
+                        let _v_parsed_script = script;
+                        if (typeof script === 'string') {
+                          try {
+                            _v_parsed_script = JSON.parse(script);
+                          } catch (e) {
+                            // 파싱 실패시 원본 문자열 사용
+                            _v_parsed_script = { question: script, answer: '' };
+                          }
+                        }
+                        
+                        // 스크립트가 객체인 경우 (question, answer)
+                        if (typeof _v_parsed_script === 'object' && _v_parsed_script !== null) {
+                          const _v_question = _v_parsed_script.question || _v_parsed_script.question_category || '질문';
+                          const _v_answer = _v_parsed_script.answer || _v_parsed_script.response || _v_parsed_script.response_template || '답변 없음';
+                          
+                          return (
+                            <TableRow 
+                              key={index}
+                              sx={{ 
+                                backgroundColor: DARK_COLORS.cardBg,
+                                '&:hover': { 
+                                  backgroundColor: DARK_COLORS.cardHoverBg,
+                                  transition: 'background-color 0.2s'
+                                }
+                              }}
+                            >
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={index + 1} 
+                                  size="small"
+                                  sx={{ 
+                                    fontWeight: 'bold', 
+                                    minWidth: 35,
+                                    bgcolor: alpha(DARK_COLORS.primary, 0.2),
+                                    color: DARK_COLORS.primary,
+                                    border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                                <Typography variant="body2" fontWeight="bold" sx={{ color: DARK_COLORS.primary }}>
+                                  {_v_question}
+                                </Typography>
+                              </TableCell>
+                              <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                                <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                                  {_v_answer}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        
+                        // 스크립트가 문자열인 경우
+                        return (
+                          <TableRow 
+                            key={index}
+                            sx={{ 
+                              backgroundColor: DARK_COLORS.cardBg,
+                              '&:hover': { 
+                                backgroundColor: DARK_COLORS.cardHoverBg,
+                                transition: 'background-color 0.2s'
+                              }
+                            }}
+                          >
+                            <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                              <Chip 
+                                label={index + 1} 
+                                size="small"
+                                sx={{
+                                  bgcolor: alpha(DARK_COLORS.primary, 0.2),
+                                  color: DARK_COLORS.primary,
+                                  border: `1px solid ${alpha(DARK_COLORS.primary, 0.3)}`
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell colSpan={2} sx={{ borderColor: DARK_COLORS.border }}>
+                              <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                                {typeof script === 'string' ? script : JSON.stringify(script)}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              );
+            })()}
+          </Box>
           
-          {/* 리스크 포인트 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 3 }}>
+          {/* 리스크 포인트 테이블 */}
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
             ⚠️ 리스크 포인트
           </Typography>
-          {(liveData.cs_info?.risk_points || liveData.cs_response?.risk_points || []).map((risk, index) => (
-            <Alert key={index} severity="error" sx={{ mb: 1 }}>
-              {risk}
-            </Alert>
-          ))}
-          {!(liveData.cs_info?.risk_points || liveData.cs_response?.risk_points)?.length && (
-            <Typography variant="body2" color="text.secondary">정보 없음</Typography>
-          )}
+          <Box sx={{ mb: 3 }}>
+            {(() => {
+              // CS 정보에서 리스크 포인트 추출 및 파싱
+              let _v_risk_points = liveData.cs_info?.risk_points || liveData.cs_response?.risk_points || [];
+              
+              // 문자열인 경우 JSON 파싱 시도
+              if (typeof _v_risk_points === 'string') {
+                try {
+                  _v_risk_points = JSON.parse(_v_risk_points);
+                } catch (e) {
+                  console.warn('리스크 포인트 파싱 실패:', e);
+                  _v_risk_points = [];
+                }
+              }
+              
+              // 배열이 아닌 경우 빈 배열로 초기화
+              if (!Array.isArray(_v_risk_points)) {
+                _v_risk_points = [];
+              }
+              
+              // 데이터가 없는 경우
+              if (_v_risk_points.length === 0) {
+                return (
+                  <Alert severity="success" sx={{ bgcolor: alpha(DARK_COLORS.success, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                    <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>특별한 리스크 포인트가 없습니다.</Typography>
+                  </Alert>
+                );
+              }
+              
+              // 최대 10개까지만 표시
+              const _v_limited_risks = _v_risk_points.slice(0, 10);
+              
+              // 테이블 형태로 표시
+              return (
+                <TableContainer component={Paper} sx={{ boxShadow: 2, bgcolor: DARK_COLORS.cardBg, border: `2px solid ${DARK_COLORS.error}` }}>
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: alpha(DARK_COLORS.error, 0.2) }}>
+                        <TableCell align="center" sx={{ fontWeight: 'bold', width: '80px', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>위험도</TableCell>
+                        <TableCell sx={{ fontWeight: 'bold', color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>리스크 내용</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {_v_limited_risks.map((risk, index) => {
+                        // 리스크가 문자열인 경우 JSON 파싱 시도
+                        let _v_parsed_risk = risk;
+                        if (typeof risk === 'string') {
+                          try {
+                            _v_parsed_risk = JSON.parse(risk);
+                          } catch (e) {
+                            // 파싱 실패시 원본 문자열을 description으로 사용
+                            _v_parsed_risk = { level: 'medium', description: risk };
+                          }
+                        }
+                        
+                        // 리스크가 객체인 경우 (level, description 등)
+                        if (typeof _v_parsed_risk === 'object' && _v_parsed_risk !== null) {
+                          const _v_level = _v_parsed_risk.level || _v_parsed_risk.risk_level || 'medium';
+                          const _v_description = _v_parsed_risk.description || 
+                                                _v_parsed_risk.content || 
+                                                _v_parsed_risk.risk_description || 
+                                                '리스크 내용 없음';
+                          
+                          // 위험도에 따른 배경색 (다크 테마)
+                          const _v_row_bg = _v_level === 'high' 
+                            ? alpha(DARK_COLORS.error, 0.15) 
+                            : _v_level === 'medium' 
+                            ? alpha(DARK_COLORS.warning, 0.15) 
+                            : DARK_COLORS.cardBg;
+                          
+                          return (
+                            <TableRow 
+                              key={index}
+                              sx={{ 
+                                backgroundColor: _v_row_bg,
+                                '&:hover': { 
+                                  backgroundColor: _v_level === 'high' 
+                                    ? alpha(DARK_COLORS.error, 0.25) 
+                                    : _v_level === 'medium' 
+                                    ? alpha(DARK_COLORS.warning, 0.25) 
+                                    : DARK_COLORS.cardHoverBg,
+                                  transition: 'background-color 0.2s'
+                                }
+                              }}
+                            >
+                              <TableCell align="center" sx={{ borderColor: DARK_COLORS.border }}>
+                                <Chip 
+                                  label={_v_level.toUpperCase()} 
+                                  size="small"
+                                  icon={<WarningIcon />}
+                                  sx={{ 
+                                    fontWeight: 'bold',
+                                    bgcolor: _v_level === 'high' 
+                                      ? alpha(DARK_COLORS.error, 0.2) 
+                                      : _v_level === 'medium' 
+                                      ? alpha(DARK_COLORS.warning, 0.2) 
+                                      : alpha(DARK_COLORS.info, 0.2),
+                                    color: _v_level === 'high' 
+                                      ? DARK_COLORS.error 
+                                      : _v_level === 'medium' 
+                                      ? DARK_COLORS.warning 
+                                      : DARK_COLORS.info,
+                                    border: `1px solid ${_v_level === 'high' 
+                                      ? alpha(DARK_COLORS.error, 0.3) 
+                                      : _v_level === 'medium' 
+                                      ? alpha(DARK_COLORS.warning, 0.3) 
+                                      : alpha(DARK_COLORS.info, 0.3)}`
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
+                                <Typography variant="body2" sx={{ 
+                                  fontWeight: _v_level === 'high' ? 'bold' : 'normal',
+                                  color: DARK_COLORS.text.primary
+                                }}>
+                                  {_v_description}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        }
+                        
+                        // 폴백: 파싱되지 않은 경우 (이 코드는 거의 실행되지 않음)
+                        // JSON 파싱 로직에서 이미 처리되었으므로
+                        return null;
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              );
+            })()}
+          </Box>
           
           {/* CS 노트 */}
           {(liveData.cs_info?.cs_note || liveData.cs_info?.cs_notes || liveData.cs_response?.cs_note) && (
-            <Alert severity="info" sx={{ mt: 2 }}>
-              <Typography variant="body2" fontWeight="bold">CS 노트</Typography>
-              <Typography variant="body2">{liveData.cs_info?.cs_note || liveData.cs_info?.cs_notes || liveData.cs_response?.cs_note}</Typography>
-            </Alert>
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                📌 CS 노트
+              </Typography>
+              <Alert 
+                severity="info" 
+                sx={{ 
+                  backgroundColor: '#e3f2fd',
+                  border: '1px solid #2196f3'
+                }}
+              >
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                  {liveData.cs_info?.cs_note || liveData.cs_info?.cs_notes || liveData.cs_response?.cs_note}
+                </Typography>
+              </Alert>
+            </Box>
           )}
-        </AccordionDetails>
-      </Accordion>
+        </Box>
+      </Paper>
+
+      {/* ========== 신규 수집 데이터 ========== */}
+      
+      {/* 쿠폰 정보 (신규) */}
+      {liveData.coupons_new && liveData.coupons_new.length > 0 && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <LocalOfferIcon sx={{ mr: 1 }} /> 🎟️ 쿠폰 정보
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          <Grid container spacing={2}>
+            {liveData.coupons_new.map((coupon, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Card sx={{ height: '100%', border: '2px solid #ff9800' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="primary" gutterBottom>
+                      {coupon.discount_rate && `${coupon.discount_rate}% 할인`}
+                      {coupon.discount_amount && `${coupon.discount_amount.toLocaleString()}원 할인`}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {coupon.coupon_name}
+                    </Typography>
+                    <Chip 
+                      label={coupon.coupon_type || '할인쿠폰'} 
+                      size="small" 
+                      sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }} 
+                      sx={{ mt: 1 }}
+                    />
+                    {coupon.min_purchase_amount && (
+                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        최소 구매: {coupon.min_purchase_amount.toLocaleString()}원
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
+
+      {/* 라이브 소개 (신규) */}
+      {liveData.intro && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <InfoIcon sx={{ mr: 1 }} /> 📺 라이브 소개
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          {liveData.intro.intro_title && (
+            <Typography variant="h5" sx={{ color: DARK_COLORS.text.primary }} gutterBottom fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }}>
+              {liveData.intro.intro_title}
+            </Typography>
+          )}
+          
+          {liveData.intro.intro_description && (
+            <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-wrap' }}>
+              {liveData.intro.intro_description}
+            </Typography>
+          )}
+          
+          {liveData.intro.intro_highlights && JSON.parse(liveData.intro.intro_highlights || '[]').length > 0 && (
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              {JSON.parse(liveData.intro.intro_highlights).map((highlight, idx) => (
+                <Chip key={idx} label={highlight} color="primary" />
+              ))}
+            </Stack>
+          )}
+          
+          {liveData.intro.host_name && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}`, borderRadius: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">진행자</Typography>
+              <Typography variant="body1" fontWeight="bold">{liveData.intro.host_name}</Typography>
+            </Box>
+          )}
+        </Paper>
+      )}
+
+      {/* 통계 정보 (신규) */}
+      {liveData.statistics && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <EventIcon sx={{ mr: 1 }} /> 📊 통계 정보
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          <Grid container spacing={3}>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" color="primary">
+                  {liveData.statistics.view_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">조회수</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }}>
+                  {liveData.statistics.like_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">좋아요</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.success, 0.2), color: DARK_COLORS.success, border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}` }}>
+                  {liveData.statistics.comment_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">댓글</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }}>
+                  {liveData.statistics.share_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">공유</Typography>
+              </Card>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
+      {/* 실시간 댓글 (신규) */}
+      {liveData.comments && liveData.comments.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              💬 실시간 댓글 ({liveData.comments.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {liveData.comments.map((comment, index) => (
+                <Card key={index} sx={{ mb: 2, p: 2 }}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <Chip 
+                      label={comment.comment_type || 'comment'} 
+                      size="small" 
+                      color={comment.comment_type === 'question' ? 'warning' : 'default'}
+                    />
+                    {comment.user_name && (
+                      <Typography variant="caption" fontWeight="bold">
+                        {comment.user_name}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                    {comment.comment_text}
+                  </Typography>
+                  {comment.like_count > 0 && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      ❤️ {comment.like_count}
+                    </Typography>
+                  )}
+                </Card>
+              ))}
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      )}
+
+      {/* FAQ (신규) */}
+      {liveData.faqs && liveData.faqs.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              ❓ 자주 묻는 질문 ({liveData.faqs.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {liveData.faqs.map((faq, index) => (
+              <Accordion key={index}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {faq.category && (
+                      <Chip label={faq.category} size="small" color="info" />
+                    )}
+                    <Typography variant="body1" fontWeight="bold">
+                      Q: {faq.question}
+                    </Typography>
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    A: {faq.answer}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      )}
+
+      {/* 이미지 갤러리 (신규) */}
+      {liveData.images && liveData.images.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              🖼️ 이미지 갤러리 ({liveData.images.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {liveData.images.map((image, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card>
+                    <Box
+                      component="img"
+                      src={image.image_url}
+                      alt={image.image_alt || `이미지 ${index + 1}`}
+                      sx={{
+                        width: '100%',
+                        height: 200,
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <CardContent>
+                      <Chip 
+                        label={image.image_type || 'image'} 
+                        size="small" 
+                        color="primary"
+                      />
+                      {image.image_alt && (
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                          {image.image_alt}
+                        </Typography>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+      )}
 
       {/* 하단 버튼 */}
       <Box sx={{ textAlign: 'center', mt: 4 }}>
         <Button 
           variant="contained" 
           size="large"
-          onClick={() => window.open(liveData.metadata?.source_url || liveData.source_url, '_blank')}
+          onClick={() => {
+            const _v_source_url = liveData.meta?.source_url || liveData.metadata?.source_url || liveData.source_url || liveData.event_url;
+            if (_v_source_url && _v_source_url !== 'about:blank' && _v_source_url.trim() !== '') {
+              // Referrer를 유지하면서 새 창 열기
+              const newWindow = window.open('', '_blank');
+              if (newWindow) {
+                newWindow.location.href = _v_source_url;
+              } else {
+                alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+              }
+            } else {
+              alert('라이브 방송 URL을 찾을 수 없습니다.');
+            }
+          }}
           sx={{ mr: 2 }}
         >
           라이브 방송 보기
@@ -624,6 +2346,7 @@ const LiveBroadcastDetail = () => {
         </Button>
       </Box>
     </Container>
+    </Box>
   );
 };
 

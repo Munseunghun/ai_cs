@@ -1,0 +1,72 @@
+[
+  {
+    "id": "NAVER",
+    "code": "NAVER",
+    "name": "네이버",
+    "url": "https://shoppinglive.naver.com",
+    "isActive": true
+  },
+  {
+    "id": "KAKAO",
+    "code": "KAKAO",
+    "name": "카카오",
+    "url": "https://shoppinglive.kakao.com",
+    "isActive": true
+  },
+  {
+    "id": "11ST",
+    "code": "11ST",
+    "name": "11번가",
+    "url": "https://m.11st.co.kr/page/main/live11",
+    "isActive": true
+  },
+  {
+    "id": "GMARKET",
+    "code": "GMARKET",
+    "name": "G마켓",
+    "url": "https://m.gmarket.co.kr/n/live/schedule",
+    "isActive": true
+  },
+  {
+    "id": "OLIVEYOUNG",
+    "code": "OLIVEYOUNG",
+    "name": "올리브영",
+    "url": "https://m.oliveyoung.co.kr/m/mtn/explorer?menu=live",
+    "isActive": true
+  },
+  {
+    "id": "GRIP",
+    "code": "GRIP",
+    "name": "그립",
+    "url": "https://www.grip.show/discover/category",
+    "isActive": true
+  },
+  {
+    "id": "MUSINSA",
+    "code": "MUSINSA",
+    "name": "무신사",
+    "url": "https://www.musinsa.com/campaign/musinsa_live/0",
+    "isActive": true
+  },
+  {
+    "id": "LOTTEON",
+    "code": "LOTTEON",
+    "name": "롯데온",
+    "url": "https://www.lotteon.com/display/planV2/planDetail",
+    "isActive": true
+  },
+  {
+    "id": "AMOREMALL",
+    "code": "AMOREMALL",
+    "name": "아모레몰",
+    "url": "https://www.amoremall.com/kr/ko/display/live",
+    "isActive": true
+  },
+  {
+    "id": "INNISFREE_MALL",
+    "code": "INNISFREE_MALL",
+    "name": "이니스프리몰",
+    "url": "https://www.innisfree.com/kr/ko/display/live",
+    "isActive": true
+  }
+]

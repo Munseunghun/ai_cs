@@ -24,6 +24,13 @@ import {
   Stack,
   Divider,
   alpha,
+  Alert,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Button,
 } from '@mui/material';
 import {
   LiveTv as LiveTvIcon,
@@ -32,9 +39,20 @@ import {
   TrendingUp as TrendingUpIcon,
   Storefront as StorefrontIcon,
   BusinessCenter as BusinessCenterIcon,
+  Close as CloseIcon,
+  OpenInNew as OpenInNewIcon,
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getRealCollectedEvents } from '../mockData/realCollectedData';
+import { getPlatforms } from '../utils/platformUtils';
+
+// API 기본 URL (환경변수 또는 기본값)
+// 환경변수에 /api가 포함되어 있지 않도록 주의 (끝에 /api가 있으면 제거)
+const getApiBaseUrl = () => {
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  // 끝에 /api가 있으면 제거
+  return baseUrl.replace(/\/api\/?$/, '');
+};
+const API_BASE_URL = getApiBaseUrl();
 
 // 다크 테마 색상 팔레트
 const DARK_COLORS = {
@@ -58,78 +76,196 @@ const DARK_COLORS = {
 const Dashboard = () => {
   const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // 중복 요청 방지용
+  
+  // 모달 상태 관리
+  const [platformModalOpen, setPlatformModalOpen] = useState(false);
+  const [brandModalOpen, setBrandModalOpen] = useState(false);
   
   // 데이터 로드 및 분석
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    // 컴포넌트 마운트 시 한 번만 실행 (React StrictMode 대응)
+    let _v_mounted = true;
+    
+    const _v_loadData = async () => {
+      if (!isLoading) {
+        await loadDashboardData();
+      }
+    };
+    
+    _v_loadData();
+    
+    // 1시간마다 데이터 갱신 (스케줄러와 동기화)
+    const interval = setInterval(() => {
+      if (_v_mounted && !isLoading) {
+        _v_loadData();
+      }
+    }, 60 * 60 * 1000); // 1시간 = 60분 * 60초 * 1000ms
+    
+    return () => {
+      _v_mounted = false;
+      clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 빈 배열로 마운트 시 한 번만 실행
   
-  const loadDashboardData = () => {
+  /**
+   * 백엔드 API에서 대시보드 데이터 로드
+   */
+  const loadDashboardData = async () => {
+    // 이미 로딩 중이면 중복 요청 방지
+    if (isLoading) {
+      console.log('⏸️ 이미 로딩 중이므로 요청을 건너뜁니다.');
+      return;
+    }
+    
     try {
-      const allEvents = getRealCollectedEvents();
+      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       
-      const activeEvents = allEvents.filter(e => e.status === 'ACTIVE');
-      const pendingEvents = allEvents.filter(e => e.status === 'PENDING' || e.status === 'SCHEDULED');
-      const endedEvents = allEvents.filter(e => e.status === 'ENDED' || e.status === 'COMPLETED');
+      // 백엔드 API 호출
+      const apiUrl = `${API_BASE_URL}/api/dashboard`;
+      console.log('🔍 대시보드 API 호출:', apiUrl);
       
-      const platformStats = {};
-      allEvents.forEach(event => {
-        const platform = event.channel_name || '기타';
-        if (!platformStats[platform]) {
-          platformStats[platform] = { platform, active: 0, pending: 0, ended: 0, total: 0 };
-        }
-        platformStats[platform].total++;
-        if (event.status === 'ACTIVE') platformStats[platform].active++;
-        else if (event.status === 'PENDING' || event.status === 'SCHEDULED') platformStats[platform].pending++;
-        else if (event.status === 'ENDED' || event.status === 'COMPLETED') platformStats[platform].ended++;
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // CORS 및 네트워크 에러 처리
+        mode: 'cors',
+      }).catch((fetchError) => {
+        // 네트워크 에러 (서버가 실행되지 않음, CORS 문제 등)
+        console.error('❌ Fetch 에러:', fetchError);
+        throw new Error(`백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요. (${fetchError.message})`);
       });
       
-      const brandStats = {};
-      allEvents.forEach(event => {
-        const brands = ['설화수', '라네즈', '아이오페', '헤라', '에스트라', '이니스프리', '해피바스', '바이탈뷰티', '프리메라', '오설록'];
-        const foundBrand = brands.find(brand => 
-          event.title?.includes(brand) || 
-          event.subtitle?.includes(brand) || 
-          (event.tags && event.tags.includes(brand))
-        );
-        
-        if (foundBrand) {
-          if (!brandStats[foundBrand]) {
-            brandStats[foundBrand] = { brand: foundBrand, active: 0, pending: 0, ended: 0, total: 0 };
-          }
-          brandStats[foundBrand].total++;
-          if (event.status === 'ACTIVE') brandStats[foundBrand].active++;
-          else if (event.status === 'PENDING' || event.status === 'SCHEDULED') brandStats[foundBrand].pending++;
-          else if (event.status === 'ENDED' || event.status === 'COMPLETED') brandStats[foundBrand].ended++;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ API 응답 에러:', response.status, errorText);
+        throw new Error(`API 요청 실패: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ API 응답 성공:', result);
+      
+      if (!result.success) {
+        throw new Error(result.message || '대시보드 데이터 조회 실패');
+      }
+      
+      // API 응답 데이터 변환
+      const apiData = result.data;
+      
+      // 데이터베이스에 데이터가 없으면 빈 데이터 반환
+      if (apiData.summary.totalEvents === 0) {
+        console.log('⚠️ 데이터베이스에 데이터가 없습니다.');
+        // 빈 데이터 구조 반환
+        setDashboardData({
+          summary: {
+            totalEvents: 0,
+            activeEvents: 0,
+            pendingEvents: 0,
+            endedEvents: 0,
+            totalPlatforms: 0,
+            totalBrands: 0,
+            lastUpdated: new Date().toISOString()
+          },
+          platformStats: [],
+          brandStats: [],
+          recentActiveEvents: [],
+          recentPendingEvents: []
+        });
+        return;
+      }
+      
+      // 관리자에서 추가한 플랫폼도 통계에 포함 (데이터가 없어도 플랫폼 목록에 표시)
+      const adminPlatforms = getPlatforms();
+      const platformStatsMap = {};
+      
+      // API에서 받은 플랫폼 통계를 맵으로 변환
+      apiData.platformStats.forEach(platform => {
+        platformStatsMap[platform.platform] = platform;
+      });
+      
+      // 관리자 플랫폼 추가
+      adminPlatforms.forEach(adminPlatform => {
+        const platformName = adminPlatform.name;
+        if (!platformStatsMap[platformName]) {
+          platformStatsMap[platformName] = { 
+            platform: platformName, 
+            active: 0, 
+            pending: 0, 
+            ended: 0, 
+            total: 0 
+          };
         }
       });
       
-      const platformChartData = Object.values(platformStats);
-      const brandChartData = Object.values(brandStats);
-      const recentActiveEvents = activeEvents.slice(0, 5);
-      const recentPendingEvents = pendingEvents.slice(0, 5);
+      // 마지막 업데이트 시간 포맷팅
+      const lastUpdated = apiData.summary.lastUpdated 
+        ? new Date(apiData.summary.lastUpdated).toLocaleString('ko-KR', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })
+        : new Date().toLocaleString('ko-KR', { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+      
+      // 대시보드 데이터 설정
+      // totalPlatforms는 관리자 플랫폼을 포함한 실제 플랫폼 수로 재계산
+      const actualTotalPlatforms = Object.keys(platformStatsMap).length;
       
       setDashboardData({
         summary: {
-          totalEvents: allEvents.length,
-          activeEvents: activeEvents.length,
-          pendingEvents: pendingEvents.length,
-          endedEvents: endedEvents.length,
-          totalPlatforms: Object.keys(platformStats).length,
-          totalBrands: Object.keys(brandStats).length
+          ...apiData.summary,
+          totalPlatforms: actualTotalPlatforms, // 관리자 플랫폼 포함하여 재계산
+          lastUpdated
         },
-        platformStats: platformChartData,
-        brandStats: brandChartData,
-        recentActiveEvents,
-        recentPendingEvents
+        platformStats: Object.values(platformStatsMap),
+        brandStats: apiData.brandStats || [],
+        recentActiveEvents: apiData.recentActiveEvents || [],
+        recentPendingEvents: apiData.recentPendingEvents || []
       });
       
     } catch (err) {
       console.error('대시보드 데이터 로드 오류:', err);
+      setError(err.message || '대시보드 데이터를 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+      setIsLoading(false);
     }
   };
   
-  if (!dashboardData) {
+  if (loading) {
+    return (
+      <Box 
+        sx={{ 
+          minHeight: '100vh', 
+          bgcolor: DARK_COLORS.background, 
+          display: 'flex', 
+          flexDirection: 'column',
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: 2
+        }}
+      >
+        <CircularProgress sx={{ color: DARK_COLORS.primary }} />
+        <Typography sx={{ color: DARK_COLORS.text.primary }}>실제 수집 데이터를 불러오는 중...</Typography>
+      </Box>
+    );
+  }
+  
+  if (error) {
     return (
       <Box 
         sx={{ 
@@ -137,12 +273,43 @@ const Dashboard = () => {
           bgcolor: DARK_COLORS.background, 
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'center' 
+          justifyContent: 'center',
+          p: 4
         }}
       >
-        <Typography sx={{ color: DARK_COLORS.text.primary }}>데이터를 로드하는 중...</Typography>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            bgcolor: DARK_COLORS.cardBg,
+            color: DARK_COLORS.text.primary,
+            maxWidth: 600
+          }}
+        >
+          <Typography variant="h6" gutterBottom>데이터 로드 실패</Typography>
+          <Typography>{error}</Typography>
+          <Typography variant="body2" sx={{ mt: 2, color: DARK_COLORS.text.secondary }}>
+            백엔드 서버가 실행 중인지 확인해주세요.
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: DARK_COLORS.text.secondary }}>
+            API 주소: {`${API_BASE_URL}/api/dashboard`}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: DARK_COLORS.text.secondary }}>
+            Health Check: {`${API_BASE_URL}/health`}
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 2, color: DARK_COLORS.text.secondary, fontStyle: 'italic' }}>
+            백엔드 서버 실행 방법:
+          </Typography>
+          <Typography variant="body2" component="pre" sx={{ mt: 1, color: DARK_COLORS.text.secondary, fontFamily: 'monospace', fontSize: '0.875rem', bgcolor: alpha(DARK_COLORS.cardBg, 0.5), p: 1, borderRadius: 1 }}>
+{`cd backend
+npm start`}
+          </Typography>
+        </Alert>
       </Box>
     );
+  }
+  
+  if (!dashboardData) {
+    return null;
   }
   
   const { summary, platformStats, brandStats, recentActiveEvents, recentPendingEvents } = dashboardData;
@@ -179,33 +346,73 @@ const Dashboard = () => {
       <Container maxWidth="xl" sx={{ pt: 4 }}>
         {/* 페이지 헤더 */}
         <Box mb={5}>
-          <Typography 
-            variant="h3" 
-            component="h1" 
-            gutterBottom 
-            sx={{ 
-              fontWeight: 800,
-              color: DARK_COLORS.text.primary,
-              letterSpacing: '-0.02em',
-              background: `linear-gradient(135deg, ${DARK_COLORS.primary} 0%, ${DARK_COLORS.secondary} 100%)`,
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              mb: 1,
-            }}
-          >
-            Live Dashboard
-          </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ 
-              color: DARK_COLORS.text.secondary,
-              fontWeight: 400,
-              letterSpacing: '0.02em',
-            }}
-          >
-            플랫폼별, 브랜드별 실시간 라이브 방송 현황
-          </Typography>
+          <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+            <Box>
+              <Typography 
+                variant="h3" 
+                component="h1" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 800,
+                  color: DARK_COLORS.text.primary,
+                  letterSpacing: '-0.02em',
+                  background: `linear-gradient(135deg, ${DARK_COLORS.primary} 0%, ${DARK_COLORS.secondary} 100%)`,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  mb: 1,
+                }}
+              >
+                Live Dashboard
+              </Typography>
+              <Typography 
+                variant="h6" 
+                sx={{ 
+                  color: DARK_COLORS.text.secondary,
+                  fontWeight: 400,
+                  letterSpacing: '0.02em',
+                }}
+              >
+                플랫폼별, 브랜드별 실시간 라이브 방송 현황
+              </Typography>
+            </Box>
+            {dashboardData?.summary?.lastUpdated && (
+              <Box 
+                sx={{ 
+                  bgcolor: alpha(DARK_COLORS.cardBg, 0.6),
+                  border: `1px solid ${DARK_COLORS.border}`,
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                }}
+              >
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: DARK_COLORS.text.secondary,
+                    fontSize: '0.75rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                  }}
+                >
+                  <ScheduleIcon sx={{ fontSize: '0.875rem' }} />
+                  마지막 업데이트: {dashboardData.summary.lastUpdated}
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  sx={{ 
+                    color: DARK_COLORS.text.disabled,
+                    fontSize: '0.7rem',
+                    display: 'block',
+                    mt: 0.5,
+                  }}
+                >
+                  (1시간마다 자동 갱신)
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
         
         {/* 통계 카드 */}
@@ -262,12 +469,14 @@ const Dashboard = () => {
           
           <Grid item xs={12} sm={6} md={2}>
             <Card 
+              onClick={() => navigate('/search?status=ACTIVE')}
               sx={{ 
                 bgcolor: DARK_COLORS.cardBg,
                 border: `1px solid ${DARK_COLORS.border}`,
                 borderRadius: 3,
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
                   boxShadow: `0 12px 48px ${alpha(DARK_COLORS.secondary, 0.3)}`,
@@ -304,12 +513,14 @@ const Dashboard = () => {
           
           <Grid item xs={12} sm={6} md={2}>
             <Card 
+              onClick={() => navigate('/search?status=PENDING')}
               sx={{ 
                 bgcolor: DARK_COLORS.cardBg,
                 border: `1px solid ${DARK_COLORS.border}`,
                 borderRadius: 3,
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
                   boxShadow: `0 12px 48px ${alpha(DARK_COLORS.info, 0.3)}`,
@@ -346,12 +557,14 @@ const Dashboard = () => {
           
           <Grid item xs={12} sm={6} md={2}>
             <Card 
+              onClick={() => navigate('/search?status=ENDED')}
               sx={{ 
                 bgcolor: DARK_COLORS.cardBg,
                 border: `1px solid ${DARK_COLORS.border}`,
                 borderRadius: 3,
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
                   boxShadow: `0 12px 48px ${alpha(DARK_COLORS.success, 0.3)}`,
@@ -638,21 +851,44 @@ const Dashboard = () => {
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
-              <Typography 
-                variant="h6" 
-                gutterBottom 
+              <Box 
                 sx={{ 
-                  fontWeight: 700, 
-                  color: DARK_COLORS.text.primary, 
-                  mb: 3,
-                  display: 'flex',
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
                   alignItems: 'center',
-                  gap: 1.5,
+                  mb: 3
                 }}
               >
-                <StorefrontIcon sx={{ color: DARK_COLORS.primary }} />
-                플랫폼 상세 현황
-              </Typography>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: DARK_COLORS.text.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <StorefrontIcon sx={{ color: DARK_COLORS.primary }} />
+                  플랫폼 상세 현황
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  endIcon={<OpenInNewIcon />}
+                  onClick={() => setPlatformModalOpen(true)}
+                  sx={{
+                    color: DARK_COLORS.primary,
+                    borderColor: DARK_COLORS.primary,
+                    '&:hover': {
+                      borderColor: DARK_COLORS.primary,
+                      bgcolor: alpha(DARK_COLORS.primary, 0.1),
+                    }
+                  }}
+                >
+                  전체 보기
+                </Button>
+              </Box>
               <TableContainer>
                 <Table>
                   <TableHead>
@@ -685,7 +921,12 @@ const Dashboard = () => {
                             bgcolor: alpha(DARK_COLORS.primary, 0.08),
                           }
                         }}
-                        onClick={() => navigate(`/search?channel=${platform.platform}`)}
+                        onClick={() => {
+                          // 플랫폼 이름을 코드로 변환
+                          const platformObj = getPlatforms().find(p => p.name === platform.platform);
+                          const platformCode = platformObj ? platformObj.code : platform.platform;
+                          navigate(`/search?channel=${platformCode}`);
+                        }}
                       >
                         <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
                           <Box display="flex" alignItems="center" gap={1.5}>
@@ -766,21 +1007,44 @@ const Dashboard = () => {
                 boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
-              <Typography 
-                variant="h6" 
-                gutterBottom 
+              <Box 
                 sx={{ 
-                  fontWeight: 700, 
-                  color: DARK_COLORS.text.primary, 
-                  mb: 3,
-                  display: 'flex',
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
                   alignItems: 'center',
-                  gap: 1.5,
+                  mb: 3
                 }}
               >
-                <BusinessCenterIcon sx={{ color: DARK_COLORS.secondary }} />
-                브랜드 상세 현황
-              </Typography>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    color: DARK_COLORS.text.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                  }}
+                >
+                  <BusinessCenterIcon sx={{ color: DARK_COLORS.secondary }} />
+                  브랜드 상세 현황
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  endIcon={<OpenInNewIcon />}
+                  onClick={() => setBrandModalOpen(true)}
+                  sx={{
+                    color: DARK_COLORS.secondary,
+                    borderColor: DARK_COLORS.secondary,
+                    '&:hover': {
+                      borderColor: DARK_COLORS.secondary,
+                      bgcolor: alpha(DARK_COLORS.secondary, 0.1),
+                    }
+                  }}
+                >
+                  전체 보기
+                </Button>
+              </Box>
               <TableContainer sx={{ maxHeight: 400 }}>
                 <Table stickyHeader>
                   <TableHead>
@@ -838,11 +1102,20 @@ const Dashboard = () => {
                           <Chip 
                             label={brand.active} 
                             size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              navigate(`/search?brand=${brand.brand}&status=ACTIVE`);
+                            }}
                             sx={{ 
                               bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
                               color: DARK_COLORS.secondary, 
                               fontWeight: 700,
                               border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: alpha(DARK_COLORS.secondary, 0.25),
+                                border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                              },
                             }}
                           />
                         </TableCell>
@@ -850,11 +1123,20 @@ const Dashboard = () => {
                           <Chip 
                             label={brand.pending} 
                             size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              navigate(`/search?brand=${brand.brand}&status=PENDING`);
+                            }}
                             sx={{ 
                               bgcolor: alpha(DARK_COLORS.info, 0.15), 
                               color: DARK_COLORS.info, 
                               fontWeight: 700,
                               border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: alpha(DARK_COLORS.info, 0.25),
+                                border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                              },
                             }}
                           />
                         </TableCell>
@@ -862,11 +1144,20 @@ const Dashboard = () => {
                           <Chip 
                             label={brand.ended} 
                             size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              navigate(`/search?brand=${brand.brand}&status=ENDED`);
+                            }}
                             sx={{ 
                               bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
                               color: DARK_COLORS.text.disabled, 
                               fontWeight: 700,
                               border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                              cursor: 'pointer',
+                              '&:hover': {
+                                bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
+                                border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                              },
                             }}
                           />
                         </TableCell>
@@ -1071,6 +1362,378 @@ const Dashboard = () => {
           </Grid>
         </Grid>
       </Container>
+      
+      {/* 플랫폼 전체 보기 모달 */}
+      <Dialog
+        open={platformModalOpen}
+        onClose={() => setPlatformModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: DARK_COLORS.cardBg,
+            backgroundImage: 'none',
+            border: `1px solid ${DARK_COLORS.border}`,
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: DARK_COLORS.background,
+            color: DARK_COLORS.text.primary,
+            borderBottom: `1px solid ${DARK_COLORS.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2,
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <StorefrontIcon sx={{ color: DARK_COLORS.primary }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              전체 플랫폼 목록
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => setPlatformModalOpen(false)}
+            sx={{ color: DARK_COLORS.text.secondary }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <TableContainer sx={{ maxHeight: 600 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    플랫폼
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    진행중
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    예정
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    종료
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    전체
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {platformStats.map((platform, index) => (
+                  <TableRow 
+                    key={index}
+                    sx={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': { 
+                        bgcolor: alpha(DARK_COLORS.primary, 0.08),
+                      }
+                    }}
+                    onClick={() => {
+                      const platformObj = getPlatforms().find(p => p.name === platform.platform);
+                      const platformCode = platformObj ? platformObj.code : platform.platform;
+                      navigate(`/search?channel=${platformCode}`);
+                      setPlatformModalOpen(false);
+                    }}
+                  >
+                    <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                        <Avatar 
+                          sx={{ 
+                            width: 40, 
+                            height: 40, 
+                            bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
+                            color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {platform.platform.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                            {platform.platform}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                            총 {platform.total}개 방송
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={platform.active} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const platformObj = getPlatforms().find(p => p.name === platform.platform);
+                          const platformCode = platformObj ? platformObj.code : platform.platform;
+                          navigate(`/search?channel=${platformCode}&status=ACTIVE`);
+                          setPlatformModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
+                          color: DARK_COLORS.secondary, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.secondary, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={platform.pending} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const platformObj = getPlatforms().find(p => p.name === platform.platform);
+                          const platformCode = platformObj ? platformObj.code : platform.platform;
+                          navigate(`/search?channel=${platformCode}&status=PENDING`);
+                          setPlatformModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.info, 0.15), 
+                          color: DARK_COLORS.info, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.info, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={platform.ended} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const platformObj = getPlatforms().find(p => p.name === platform.platform);
+                          const platformCode = platformObj ? platformObj.code : platform.platform;
+                          navigate(`/search?channel=${platformCode}&status=ENDED`);
+                          setPlatformModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
+                          color: DARK_COLORS.text.disabled, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Typography variant="h6" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                        {platform.total}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+      </Dialog>
+      
+      {/* 브랜드 전체 보기 모달 */}
+      <Dialog
+        open={brandModalOpen}
+        onClose={() => setBrandModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: DARK_COLORS.cardBg,
+            backgroundImage: 'none',
+            border: `1px solid ${DARK_COLORS.border}`,
+          }
+        }}
+      >
+        <DialogTitle
+          sx={{
+            bgcolor: DARK_COLORS.background,
+            color: DARK_COLORS.text.primary,
+            borderBottom: `1px solid ${DARK_COLORS.border}`,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            py: 2,
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <BusinessCenterIcon sx={{ color: DARK_COLORS.secondary }} />
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              전체 브랜드 목록
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={() => setBrandModalOpen(false)}
+            sx={{ color: DARK_COLORS.text.secondary }}
+          >
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ p: 0 }}>
+          <TableContainer sx={{ maxHeight: 600 }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    브랜드
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    진행중
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    예정
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    종료
+                  </TableCell>
+                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    전체
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {brandStats.map((brand, index) => (
+                  <TableRow 
+                    key={index}
+                    sx={{ 
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      '&:hover': { 
+                        bgcolor: alpha(DARK_COLORS.secondary, 0.08),
+                      }
+                    }}
+                    onClick={() => {
+                      navigate(`/search?brand=${brand.brand}`);
+                      setBrandModalOpen(false);
+                    }}
+                  >
+                    <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Box display="flex" alignItems="center" gap={1.5}>
+                        <Avatar 
+                          sx={{ 
+                            width: 40, 
+                            height: 40, 
+                            bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
+                            color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {brand.brand.charAt(0)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                            {brand.brand}
+                          </Typography>
+                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                            총 {brand.total}개 방송
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={brand.active} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/search?brand=${brand.brand}&status=ACTIVE`);
+                          setBrandModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
+                          color: DARK_COLORS.secondary, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.secondary, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={brand.pending} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/search?brand=${brand.brand}&status=PENDING`);
+                          setBrandModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.info, 0.15), 
+                          color: DARK_COLORS.info, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.info, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Chip 
+                        label={brand.ended} 
+                        size="medium"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/search?brand=${brand.brand}&status=ENDED`);
+                          setBrandModalOpen(false);
+                        }}
+                        sx={{ 
+                          bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
+                          color: DARK_COLORS.text.disabled, 
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
+                            border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                          }
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <Typography variant="h6" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                        {brand.total}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 };

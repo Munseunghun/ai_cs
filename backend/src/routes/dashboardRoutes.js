@@ -8,13 +8,14 @@ const router = express.Router();
 
 const eventService = require('../services/eventService');
 const { authenticate } = require('../middleware/auth');
+const { dashboardLimiter } = require('../middleware/rateLimit');
 const logger = require('../config/logger');
 
 /**
  * GET /api/dashboard
- * 대시보드 전체 데이터 조회
+ * 대시보드 전체 데이터 조회 (인증 불필요)
  */
-router.get('/', authenticate, async (p_req, p_res) => {
+router.get('/', dashboardLimiter, async (p_req, p_res) => {
   try {
     const _v_result = await eventService.getDashboardData();
     

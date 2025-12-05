@@ -35,4 +35,7 @@ pandas==2.1.4
 # UUID 생성
 uuid==1.30
 
+# Supabase 클라이언트
+supabase==2.3.4
+
 

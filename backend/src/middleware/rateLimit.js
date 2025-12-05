@@ -8,11 +8,11 @@ const logger = require('../config/logger');
 
 /**
  * 일반 API 요청 제한
- * 15분당 100회 요청
+ * 15분당 200회 요청 (대시보드 등 자주 조회되는 API 고려)
  */
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
-  max: 100, // 최대 요청 수
+  max: 200, // 최대 요청 수 (100 -> 200으로 증가)
   standardHeaders: true, // RateLimit-* 헤더 포함
   legacyHeaders: false, // X-RateLimit-* 헤더 미포함
   message: {
@@ -29,6 +29,31 @@ const generalLimiter = rateLimit({
     p_res.status(429).json({
       success: false,
       message: '너무 많은 요청을 보냈습니다. 잠시 후 다시 시도해주세요.',
+    });
+  },
+});
+
+/**
+ * 대시보드 API 전용 Rate Limiter (더 관대한 제한)
+ * 1분당 10회 요청
+ */
+const dashboardLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1분
+  max: 10, // 최대 요청 수
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: '대시보드 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
+  },
+  handler: (p_req, p_res) => {
+    logger.warn('대시보드 rate limit 초과:', {
+      ip: p_req.ip,
+    });
+    
+    p_res.status(429).json({
+      success: false,
+      message: '대시보드 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
     });
   },
 });
@@ -100,6 +125,7 @@ module.exports = {
   loginLimiter,
   searchLimiter,
   adminLimiter,
+  dashboardLimiter,
 };
 
 

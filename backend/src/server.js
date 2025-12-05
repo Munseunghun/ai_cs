@@ -21,6 +21,7 @@ const authRoutes = require('./routes/authRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Express 앱 생성
 const app = express();
@@ -42,7 +43,12 @@ app.use(helmet({
 
 // CORS 설정
 const _v_cors_options = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+  origin: [
+    'http://localhost:3000',  // 프론트엔드
+    'http://localhost:3001',  // 백엔드
+    'https://ai-cs-bf933.web.app',
+    'https://ai-cs-bf933.firebaseapp.com'
+  ],
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -55,19 +61,46 @@ if (_v_node_env === 'development') {
   app.use(morgan('combined', { stream: logger.stream }));
 }
 
-// Body 파서
+// Body 파서 (헤더 크기 제한 증가)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 요청 헤더 크기 제한 증가 (기본값보다 크게 설정)
+// Node.js 기본 헤더 크기는 8KB이지만, 많은 쿠키나 토큰이 있을 경우 부족할 수 있음
 
 // Gzip 압축
 app.use(compression());
 
 // Rate Limiting (일반 API)
-app.use('/api/', generalLimiter);
+// 대시보드는 별도의 rate limiter를 사용하므로 generalLimiter에서 제외
+app.use('/api/', (p_req, p_res, p_next) => {
+  // 대시보드 API는 generalLimiter 건너뛰기 (별도 dashboardLimiter 적용)
+  if (p_req.path.startsWith('/api/dashboard')) {
+    return p_next();
+  }
+  return generalLimiter(p_req, p_res, p_next);
+});
 
 // ============================================================================
 // 라우트 설정
 // ============================================================================
+
+// 루트 경로 라우트
+app.get('/', (p_req, p_res) => {
+  p_res.json({
+    success: true,
+    message: 'AI CS 시스템 백엔드 API 서버',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      events: '/api/events/search',
+      dashboard: '/api/dashboard',
+      admin: '/api/admin',
+      favorites: '/api/favorites'
+    },
+    note: '프론트엔드는 http://localhost:3000 에서 실행됩니다.'
+  });
+});
 
 // Health Check 엔드포인트
 app.get('/health', (p_req, p_res) => {
@@ -84,6 +117,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 핸들러
 app.use((p_req, p_res) => {
@@ -126,15 +160,29 @@ const startServer = async () => {
     logger.info('화장품 상담 시스템 백엔드 서버 시작 중...');
     logger.info('='.repeat(60));
     
-    // 1. 데이터베이스 연결 테스트
+    // 1. 데이터베이스 연결 테스트 (선택적 - Supabase 사용 시 PostgreSQL 연결 실패는 정상)
+    // Supabase를 사용하므로 PostgreSQL 연결은 선택적입니다
     logger.info('데이터베이스 연결 확인 중...');
-    const _v_db_connected = await db.testConnection();
-    
-    if (!_v_db_connected) {
-      throw new Error('데이터베이스 연결에 실패했습니다.');
+    try {
+      const _v_db_connected = await db.testConnection();
+      if (_v_db_connected) {
+        logger.info('✓ PostgreSQL 데이터베이스 연결 성공 (선택적)');
+      } else {
+        logger.debug('⚠ PostgreSQL 연결 실패 (Supabase 사용 중이므로 정상)');
+      }
+    } catch (p_db_error) {
+      // Supabase를 사용하므로 PostgreSQL 연결 실패는 무시
+      logger.debug('⚠ PostgreSQL 연결 실패 (Supabase 사용 중이므로 정상):', p_db_error.message);
     }
     
-    logger.info('✓ 데이터베이스 연결 성공');
+    // Supabase 연결 확인
+    try {
+      const { supabase } = require('./config/supabase');
+      logger.info('✓ Supabase 클라이언트 초기화 완료');
+    } catch (p_supabase_error) {
+      logger.error('❌ Supabase 초기화 실패:', p_supabase_error.message);
+      throw p_supabase_error;
+    }
     
     // 2. Redis 연결 (선택적)
     logger.info('Redis 연결 시도 중...');

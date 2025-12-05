@@ -34,6 +34,17 @@ const connectRedis = async () => {
       socket: {
         host: _v_redis_config.host,
         port: _v_redis_config.port,
+        connectTimeout: 5000, // 5초 타임아웃
+        reconnectStrategy: (p_times) => {
+          // 재연결 시도 제한 (최대 3회)
+          if (p_times > 3) {
+            logger.warn('Redis 재연결 시도 횟수 초과 - Redis 캐싱 비활성화');
+            return false; // 재연결 중단
+          }
+          const _v_delay = Math.min(p_times * 1000, 3000);
+          logger.warn(`Redis 재연결 시도 ${p_times}회 (${_v_delay}ms 후)`);
+          return _v_delay;
+        },
       },
       password: _v_redis_config.password,
       database: _v_redis_config.db,
@@ -41,7 +52,7 @@ const connectRedis = async () => {
 
     // 에러 핸들러
     redisClient.on('error', (p_error) => {
-      logger.error('Redis 에러:', p_error);
+      logger.error('Redis 에러:', p_error.message);
     });
 
     // 연결 이벤트 핸들러
@@ -54,12 +65,29 @@ const connectRedis = async () => {
       logger.warn('Redis 재연결 중...');
     });
 
-    // 연결
-    await redisClient.connect();
+    // 연결 (타임아웃 설정)
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Redis 연결 타임아웃 (5초)')), 5000)
+      )
+    ]);
     
+    logger.info('✓ Redis 연결 성공');
     return redisClient;
   } catch (p_error) {
-    logger.error('Redis 연결 실패:', p_error);
+    logger.warn('⚠ Redis 연결 실패 - 캐싱 기능이 비활성화됩니다:', p_error.message);
+    
+    // Redis 클라이언트 정리
+    if (redisClient) {
+      try {
+        await redisClient.disconnect();
+      } catch (disconnectError) {
+        // 무시
+      }
+    }
+    
+    redisClient = null;
     // Redis 연결 실패해도 서버는 계속 실행 (선택적 기능)
     return null;
   }

@@ -6,7 +6,7 @@
 import axios from 'axios';
 
 // 기본 API URL
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 // Axios 인스턴스 생성
 const axiosInstance = axios.create({

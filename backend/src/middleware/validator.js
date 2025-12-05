@@ -77,7 +77,7 @@ const validateEventSearch = [
   
   query('sort_by')
     .optional()
-    .isIn(['start_date', 'end_date', 'created_at', 'discount_rate', 'favorite_count'])
+    .isIn(['start_date', 'end_date', 'broadcast_date', 'created_at', 'discount_rate', 'favorite_count'])
     .withMessage('정렬 기준이 유효하지 않습니다.'),
   
   query('sort_order')
@@ -90,13 +90,18 @@ const validateEventSearch = [
 
 /**
  * 이벤트 ID 검증 규칙
+ * live_broadcasts 테이블의 live_id 형식 지원 (예: REAL_NAVER_IOPE_010, NAVER_SULWHASOO_001 등)
  */
 const validateEventId = [
   param('event_id')
     .notEmpty()
     .withMessage('이벤트 ID는 필수입니다.')
-    .isUUID()
-    .withMessage('이벤트 ID는 UUID 형식이어야 합니다.'),
+    .isString()
+    .trim()
+    .isLength({ min: 1, max: 255 })
+    .withMessage('이벤트 ID는 1-255자 사이의 문자열이어야 합니다.')
+    .matches(/^[A-Z0-9_]+$/)
+    .withMessage('이벤트 ID는 대문자 영문, 숫자, 언더스코어만 사용 가능합니다.'),
   
   handleValidationErrors,
 ];
