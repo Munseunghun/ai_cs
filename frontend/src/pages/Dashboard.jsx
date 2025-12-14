@@ -54,23 +54,32 @@ const getApiBaseUrl = () => {
 };
 const API_BASE_URL = getApiBaseUrl();
 
-// 다크 테마 색상 팔레트
-const DARK_COLORS = {
-  background: '#0F1419',
-  cardBg: '#1A1F2E',
-  cardHoverBg: '#252B3B',
-  primary: '#6366F1',
-  secondary: '#EC4899',
-  success: '#10B981',
-  warning: '#F59E0B',
-  info: '#3B82F6',
+// 글래스모피즘 색상 팔레트
+const GLASS_COLORS = {
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // 그라데이션 배경
+  cardBg: 'rgba(255, 255, 255, 0.1)', // 반투명 흰색
+  cardHoverBg: 'rgba(255, 255, 255, 0.15)', // 호버 시 더 밝게
+  primary: '#667eea',
+  secondary: '#f093fb',
+  success: '#4ade80',
+  warning: '#fbbf24',
+  info: '#60a5fa',
   text: {
-    primary: '#F9FAFB',
-    secondary: '#9CA3AF',
-    disabled: '#6B7280',
+    primary: '#ffffff',
+    secondary: 'rgba(255, 255, 255, 0.8)',
+    disabled: 'rgba(255, 255, 255, 0.5)',
   },
-  border: '#2D3748',
-  chart: ['#6366F1', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#A855F7']
+  border: 'rgba(255, 255, 255, 0.18)',
+  chart: ['#667eea', '#f093fb', '#4ade80', '#fbbf24', '#60a5fa', '#a78bfa', '#2dd4bf', '#fb923c', '#22d3ee', '#c084fc']
+};
+
+// 글래스모피즘 스타일
+const glassStyle = {
+  background: GLASS_COLORS.cardBg,
+  backdropFilter: 'blur(20px) saturate(180%)',
+  WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+  border: `1px solid ${GLASS_COLORS.border}`,
+  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
 };
 
 const Dashboard = () => {
@@ -251,7 +260,7 @@ const Dashboard = () => {
       <Box 
         sx={{ 
           minHeight: '100vh', 
-          bgcolor: DARK_COLORS.background, 
+          background: GLASS_COLORS.background,
           display: 'flex', 
           flexDirection: 'column',
           alignItems: 'center', 
@@ -259,8 +268,8 @@ const Dashboard = () => {
           gap: 2
         }}
       >
-        <CircularProgress sx={{ color: DARK_COLORS.primary }} />
-        <Typography sx={{ color: DARK_COLORS.text.primary }}>실제 수집 데이터를 불러오는 중...</Typography>
+        <CircularProgress sx={{ color: 'white' }} />
+        <Typography sx={{ color: 'white', fontWeight: 600 }}>실제 수집 데이터를 불러오는 중...</Typography>
       </Box>
     );
   }
@@ -270,7 +279,7 @@ const Dashboard = () => {
       <Box 
         sx={{ 
           minHeight: '100vh', 
-          bgcolor: DARK_COLORS.background, 
+          background: GLASS_COLORS.background,
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
@@ -280,26 +289,26 @@ const Dashboard = () => {
         <Alert 
           severity="error" 
           sx={{ 
-            bgcolor: DARK_COLORS.cardBg,
-            color: DARK_COLORS.text.primary,
+            ...glassStyle,
+            color: 'white',
             maxWidth: 600
           }}
         >
-          <Typography variant="h6" gutterBottom>데이터 로드 실패</Typography>
-          <Typography>{error}</Typography>
-          <Typography variant="body2" sx={{ mt: 2, color: DARK_COLORS.text.secondary }}>
+          <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>데이터 로드 실패</Typography>
+          <Typography sx={{ color: 'white' }}>{error}</Typography>
+          <Typography variant="body2" sx={{ mt: 2, color: GLASS_COLORS.text.secondary }}>
             백엔드 서버가 실행 중인지 확인해주세요.
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1, color: DARK_COLORS.text.secondary }}>
+          <Typography variant="body2" sx={{ mt: 1, color: GLASS_COLORS.text.secondary }}>
             API 주소: {`${API_BASE_URL}/api/dashboard`}
           </Typography>
-          <Typography variant="body2" sx={{ mt: 1, color: DARK_COLORS.text.secondary }}>
+          <Typography variant="body2" sx={{ mt: 1, color: GLASS_COLORS.text.secondary }}>
             Health Check: {`${API_BASE_URL}/health`}
           </Typography>
-          <Typography variant="body2" sx={{ mt: 2, color: DARK_COLORS.text.secondary, fontStyle: 'italic' }}>
+          <Typography variant="body2" sx={{ mt: 2, color: GLASS_COLORS.text.secondary, fontStyle: 'italic' }}>
             백엔드 서버 실행 방법:
           </Typography>
-          <Typography variant="body2" component="pre" sx={{ mt: 1, color: DARK_COLORS.text.secondary, fontFamily: 'monospace', fontSize: '0.875rem', bgcolor: alpha(DARK_COLORS.cardBg, 0.5), p: 1, borderRadius: 1 }}>
+          <Typography variant="body2" component="pre" sx={{ mt: 1, color: 'white', fontFamily: 'monospace', fontSize: '0.875rem', bgcolor: 'rgba(0,0,0,0.2)', p: 1, borderRadius: 1 }}>
 {`cd backend
 npm start`}
           </Typography>
@@ -314,23 +323,22 @@ npm start`}
   
   const { summary, platformStats, brandStats, recentActiveEvents, recentPendingEvents } = dashboardData;
   
-  // 커스텀 툴팁
+  // 커스텀 툴팁 - 글래스모피즘
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
       return (
         <Paper
           sx={{
             p: 2,
-            bgcolor: alpha(DARK_COLORS.cardBg, 0.95),
-            border: `1px solid ${DARK_COLORS.border}`,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+            ...glassStyle,
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
           }}
         >
           {payload.map((entry, index) => (
             <Typography 
               key={index} 
               variant="body2" 
-              sx={{ color: entry.color, fontWeight: 600 }}
+              sx={{ color: 'white', fontWeight: 600 }}
             >
               {entry.name}: {entry.value}
             </Typography>
@@ -342,8 +350,23 @@ npm start`}
   };
   
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: DARK_COLORS.background, pb: 6 }}>
-      <Container maxWidth="xl" sx={{ pt: 4 }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: GLASS_COLORS.background,
+      pb: 6,
+      position: 'relative',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%), radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.3), transparent 50%)',
+        pointerEvents: 'none',
+      }
+    }}>
+      <Container maxWidth="xl" sx={{ pt: 4, position: 'relative', zIndex: 1 }}>
         {/* 페이지 헤더 */}
         <Box mb={5}>
           <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
@@ -354,12 +377,9 @@ npm start`}
                 gutterBottom 
                 sx={{ 
                   fontWeight: 800,
-                  color: DARK_COLORS.text.primary,
+                  color: 'white',
                   letterSpacing: '-0.02em',
-                  background: `linear-gradient(135deg, ${DARK_COLORS.primary} 0%, ${DARK_COLORS.secondary} 100%)`,
-                  backgroundClip: 'text',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 2px 20px rgba(0,0,0,0.3)',
                   mb: 1,
                 }}
               >
@@ -368,9 +388,10 @@ npm start`}
               <Typography 
                 variant="h6" 
                 sx={{ 
-                  color: DARK_COLORS.text.secondary,
+                  color: 'rgba(255, 255, 255, 0.9)',
                   fontWeight: 400,
                   letterSpacing: '0.02em',
+                  textShadow: '0 1px 10px rgba(0,0,0,0.2)',
                 }}
               >
                 플랫폼별, 브랜드별 실시간 라이브 방송 현황
@@ -379,8 +400,7 @@ npm start`}
             {dashboardData?.summary?.lastUpdated && (
               <Box 
                 sx={{ 
-                  bgcolor: alpha(DARK_COLORS.cardBg, 0.6),
-                  border: `1px solid ${DARK_COLORS.border}`,
+                  ...glassStyle,
                   borderRadius: 2,
                   px: 2,
                   py: 1,
@@ -389,7 +409,7 @@ npm start`}
                 <Typography 
                   variant="caption" 
                   sx={{ 
-                    color: DARK_COLORS.text.secondary,
+                    color: 'white',
                     fontSize: '0.75rem',
                     display: 'flex',
                     alignItems: 'center',
@@ -402,7 +422,7 @@ npm start`}
                 <Typography 
                   variant="caption" 
                   sx={{ 
-                    color: DARK_COLORS.text.disabled,
+                    color: GLASS_COLORS.text.secondary,
                     fontSize: '0.7rem',
                     display: 'block',
                     mt: 0.5,
@@ -420,15 +440,13 @@ npm start`}
           <Grid item xs={12} sm={6} md={2}>
             <Card 
               sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha(DARK_COLORS.primary, 0.3)}`,
-                  border: `1px solid ${alpha(DARK_COLORS.primary, 0.5)}`,
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(31, 38, 135, 0.5)',
                 }
               }}
             >
@@ -439,27 +457,29 @@ npm start`}
                       width: 56, 
                       height: 56, 
                       borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha(DARK_COLORS.primary, 0.2)} 0%, ${alpha(DARK_COLORS.primary, 0.05)} 100%)`,
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 2,
                     }}
                   >
-                    <TrendingUpIcon sx={{ fontSize: 28, color: DARK_COLORS.primary }} />
+                    <TrendingUpIcon sx={{ fontSize: 28, color: 'white' }} />
                   </Box>
                   <Typography 
                     variant="h3" 
                     sx={{ 
-                      color: DARK_COLORS.text.primary, 
+                      color: 'white', 
                       fontWeight: 800, 
                       mb: 0.5,
-                      fontSize: { xs: '2rem', md: '2.5rem' }
+                      fontSize: { xs: '2rem', md: '2.5rem' },
+                      textShadow: '0 2px 10px rgba(0,0,0,0.3)',
                     }}
                   >
                     {summary.totalEvents}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
                     전체 방송
                   </Typography>
                 </Box>
@@ -467,20 +487,18 @@ npm start`}
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={2}>
+        {/* 통계 카드 - 글래스모피즘 */}
+        <Grid container spacing={3} mb={5}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Card 
-              onClick={() => navigate('/search?status=ACTIVE')}
               sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha(DARK_COLORS.secondary, 0.3)}`,
-                  border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(31, 38, 135, 0.5)',
                 }
               }}
             >
@@ -491,19 +509,74 @@ npm start`}
                       width: 56, 
                       height: 56, 
                       borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha(DARK_COLORS.secondary, 0.2)} 0%, ${alpha(DARK_COLORS.secondary, 0.05)} 100%)`,
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      backdropFilter: 'blur(10px)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 2,
+                      boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                     }}
                   >
-                    <LiveTvIcon sx={{ fontSize: 28, color: DARK_COLORS.secondary }} />
+                    <TrendingUpIcon sx={{ fontSize: 28, color: 'white' }} />
                   </Box>
-                  <Typography variant="h3" sx={{ color: DARK_COLORS.text.primary, fontWeight: 800, mb: 0.5 }}>
+                  <Typography 
+                    variant="h3" 
+                    sx={{ 
+                      color: 'white', 
+                      fontWeight: 800, 
+                      mb: 0.5,
+                      fontSize: { xs: '2rem', md: '2.5rem' },
+                      textShadow: '0 2px 10px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    {summary.totalEvents}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
+                    전체 방송
+                  </Typography>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+          
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card 
+              onClick={() => navigate('/search?status=ACTIVE')}
+              sx={{ 
+                ...glassStyle,
+                borderRadius: 3,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
+                '&:hover': { 
+                  transform: 'translateY(-8px)',
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(236, 72, 153, 0.4)',
+                }
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Box display="flex" flexDirection="column" alignItems="center">
+                  <Box 
+                    sx={{ 
+                      width: 56, 
+                      height: 56, 
+                      borderRadius: '16px',
+                      background: 'rgba(236, 72, 153, 0.3)',
+                      backdropFilter: 'blur(10px)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      mb: 2,
+                      boxShadow: '0 4px 15px rgba(236, 72, 153, 0.2)',
+                    }}
+                  >
+                    <LiveTvIcon sx={{ fontSize: 28, color: 'white' }} />
+                  </Box>
+                  <Typography variant="h3" sx={{ color: 'white', fontWeight: 800, mb: 0.5, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                     {summary.activeEvents}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
                     진행중
                   </Typography>
                 </Box>
@@ -511,20 +584,18 @@ npm start`}
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Card 
               onClick={() => navigate('/search?status=PENDING')}
               sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha(DARK_COLORS.info, 0.3)}`,
-                  border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(59, 130, 246, 0.4)',
                 }
               }}
             >
@@ -535,19 +606,21 @@ npm start`}
                       width: 56, 
                       height: 56, 
                       borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha(DARK_COLORS.info, 0.2)} 0%, ${alpha(DARK_COLORS.info, 0.05)} 100%)`,
+                      background: 'rgba(59, 130, 246, 0.3)',
+                      backdropFilter: 'blur(10px)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 2,
+                      boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)',
                     }}
                   >
-                    <ScheduleIcon sx={{ fontSize: 28, color: DARK_COLORS.info }} />
+                    <ScheduleIcon sx={{ fontSize: 28, color: 'white' }} />
                   </Box>
-                  <Typography variant="h3" sx={{ color: DARK_COLORS.text.primary, fontWeight: 800, mb: 0.5 }}>
+                  <Typography variant="h3" sx={{ color: 'white', fontWeight: 800, mb: 0.5, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                     {summary.pendingEvents}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
                     예정
                   </Typography>
                 </Box>
@@ -555,20 +628,18 @@ npm start`}
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Card 
               onClick={() => navigate('/search?status=ENDED')}
               sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha(DARK_COLORS.success, 0.3)}`,
-                  border: `1px solid ${alpha(DARK_COLORS.success, 0.5)}`,
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(74, 222, 128, 0.4)',
                 }
               }}
             >
@@ -579,19 +650,21 @@ npm start`}
                       width: 56, 
                       height: 56, 
                       borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha(DARK_COLORS.success, 0.2)} 0%, ${alpha(DARK_COLORS.success, 0.05)} 100%)`,
+                      background: 'rgba(74, 222, 128, 0.3)',
+                      backdropFilter: 'blur(10px)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 2,
+                      boxShadow: '0 4px 15px rgba(74, 222, 128, 0.2)',
                     }}
                   >
-                    <CheckCircleIcon sx={{ fontSize: 28, color: DARK_COLORS.success }} />
+                    <CheckCircleIcon sx={{ fontSize: 28, color: 'white' }} />
                   </Box>
-                  <Typography variant="h3" sx={{ color: DARK_COLORS.text.primary, fontWeight: 800, mb: 0.5 }}>
+                  <Typography variant="h3" sx={{ color: 'white', fontWeight: 800, mb: 0.5, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                     {summary.endedEvents}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
                     종료
                   </Typography>
                 </Box>
@@ -599,18 +672,16 @@ npm start`}
             </Card>
           </Grid>
           
-          <Grid item xs={12} sm={6} md={2}>
+          <Grid item xs={12} sm={6} md={2.4}>
             <Card 
               sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': { 
                   transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha(DARK_COLORS.warning, 0.3)}`,
-                  border: `1px solid ${alpha(DARK_COLORS.warning, 0.5)}`,
+                  background: GLASS_COLORS.cardHoverBg,
+                  boxShadow: '0 12px 48px 0 rgba(251, 191, 36, 0.4)',
                 }
               }}
             >
@@ -621,61 +692,21 @@ npm start`}
                       width: 56, 
                       height: 56, 
                       borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha(DARK_COLORS.warning, 0.2)} 0%, ${alpha(DARK_COLORS.warning, 0.05)} 100%)`,
+                      background: 'rgba(251, 191, 36, 0.3)',
+                      backdropFilter: 'blur(10px)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       mb: 2,
+                      boxShadow: '0 4px 15px rgba(251, 191, 36, 0.2)',
                     }}
                   >
-                    <StorefrontIcon sx={{ fontSize: 28, color: DARK_COLORS.warning }} />
+                    <BusinessCenterIcon sx={{ fontSize: 28, color: 'white' }} />
                   </Box>
-                  <Typography variant="h3" sx={{ color: DARK_COLORS.text.primary, fontWeight: 800, mb: 0.5 }}>
-                    {summary.totalPlatforms}
-                  </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
-                    플랫폼
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} sm={6} md={2}>
-            <Card 
-              sx={{ 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
-                borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                '&:hover': { 
-                  transform: 'translateY(-8px)',
-                  boxShadow: `0 12px 48px ${alpha('#8B5CF6', 0.3)}`,
-                  border: `1px solid ${alpha('#8B5CF6', 0.5)}`,
-                }
-              }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box display="flex" flexDirection="column" alignItems="center">
-                  <Box 
-                    sx={{ 
-                      width: 56, 
-                      height: 56, 
-                      borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${alpha('#8B5CF6', 0.2)} 0%, ${alpha('#8B5CF6', 0.05)} 100%)`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      mb: 2,
-                    }}
-                  >
-                    <BusinessCenterIcon sx={{ fontSize: 28, color: '#8B5CF6' }} />
-                  </Box>
-                  <Typography variant="h3" sx={{ color: DARK_COLORS.text.primary, fontWeight: 800, mb: 0.5 }}>
+                  <Typography variant="h3" sx={{ color: 'white', fontWeight: 800, mb: 0.5, textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                     {summary.totalBrands}
                   </Typography>
-                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 500 }}>
+                  <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, fontWeight: 500 }}>
                     브랜드
                   </Typography>
                 </Box>
@@ -684,17 +715,15 @@ npm start`}
           </Grid>
         </Grid>
         
-        {/* 차트 섹션 */}
+        {/* 차트 섹션 - 글래스모피즘 */}
         <Grid container spacing={3} mb={5}>
           {/* 플랫폼별 차트 */}
           <Grid item xs={12} md={6}>
             <Paper 
               sx={{ 
                 p: 4, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Typography 
@@ -702,19 +731,21 @@ npm start`}
                 gutterBottom 
                 sx={{ 
                   fontWeight: 700, 
-                  color: DARK_COLORS.text.primary, 
+                  color: 'white', 
                   mb: 3,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
+                  textShadow: '0 2px 10px rgba(0,0,0,0.3)',
                 }}
               >
                 <Box 
                   sx={{ 
                     width: 4, 
                     height: 28, 
-                    bgcolor: DARK_COLORS.primary, 
-                    borderRadius: 2 
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0.4) 100%)',
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(255,255,255,0.3)',
                   }} 
                 />
                 플랫폼별 라이브 방송
@@ -735,21 +766,21 @@ npm start`}
                       <stop offset="100%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.2}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={alpha(DARK_COLORS.border, 0.3)} vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
                   <XAxis 
                     dataKey="platform" 
-                    tick={{ fill: DARK_COLORS.text.secondary, fontSize: 12 }}
-                    axisLine={{ stroke: DARK_COLORS.border }}
-                    tickLine={{ stroke: DARK_COLORS.border }}
+                    tick={{ fill: 'rgba(255, 255, 255, 0.8)', fontSize: 12 }}
+                    axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+                    tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
                   />
                   <YAxis 
-                    tick={{ fill: DARK_COLORS.text.secondary, fontSize: 12 }}
-                    axisLine={{ stroke: DARK_COLORS.border }}
-                    tickLine={{ stroke: DARK_COLORS.border }}
+                    tick={{ fill: 'rgba(255, 255, 255, 0.8)', fontSize: 12 }}
+                    axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+                    tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
                   />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: alpha(DARK_COLORS.primary, 0.1) }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
                   <Legend 
-                    wrapperStyle={{ color: DARK_COLORS.text.secondary }}
+                    wrapperStyle={{ color: 'rgba(255, 255, 255, 0.8)' }}
                     iconType="circle"
                   />
                   <Bar dataKey="active" fill="url(#colorActive)" name="진행중" radius={[8, 8, 0, 0]} />
@@ -765,10 +796,8 @@ npm start`}
             <Paper 
               sx={{ 
                 p: 4, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Typography 
@@ -776,19 +805,21 @@ npm start`}
                 gutterBottom 
                 sx={{ 
                   fontWeight: 700, 
-                  color: DARK_COLORS.text.primary, 
+                  color: 'white', 
                   mb: 3,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 1.5,
+                  textShadow: '0 2px 10px rgba(0,0,0,0.3)',
                 }}
               >
                 <Box 
                   sx={{ 
                     width: 4, 
                     height: 28, 
-                    bgcolor: DARK_COLORS.secondary, 
-                    borderRadius: 2 
+                    background: 'linear-gradient(180deg, rgba(240, 147, 251, 0.8) 0%, rgba(240, 147, 251, 0.4) 100%)',
+                    borderRadius: 2,
+                    boxShadow: '0 2px 8px rgba(240, 147, 251, 0.3)',
                   }} 
                 />
                 브랜드별 라이브 방송
@@ -809,24 +840,24 @@ npm start`}
                       <stop offset="100%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.2}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={alpha(DARK_COLORS.border, 0.3)} vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
                   <XAxis 
                     dataKey="brand" 
                     angle={-45}
                     textAnchor="end"
                     height={80}
-                    tick={{ fill: DARK_COLORS.text.secondary, fontSize: 11 }}
-                    axisLine={{ stroke: DARK_COLORS.border }}
-                    tickLine={{ stroke: DARK_COLORS.border }}
+                    tick={{ fill: 'rgba(255, 255, 255, 0.8)', fontSize: 11 }}
+                    axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+                    tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
                   />
                   <YAxis 
-                    tick={{ fill: DARK_COLORS.text.secondary, fontSize: 12 }}
-                    axisLine={{ stroke: DARK_COLORS.border }}
-                    tickLine={{ stroke: DARK_COLORS.border }}
+                    tick={{ fill: 'rgba(255, 255, 255, 0.8)', fontSize: 12 }}
+                    axisLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
+                    tickLine={{ stroke: 'rgba(255, 255, 255, 0.2)' }}
                   />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: alpha(DARK_COLORS.secondary, 0.1) }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
                   <Legend 
-                    wrapperStyle={{ color: DARK_COLORS.text.secondary }}
+                    wrapperStyle={{ color: 'rgba(255, 255, 255, 0.8)' }}
                     iconType="circle"
                   />
                   <Bar dataKey="active" fill="url(#colorActive2)" name="진행중" radius={[8, 8, 0, 0]} />
@@ -838,17 +869,15 @@ npm start`}
           </Grid>
         </Grid>
         
-        {/* 테이블 섹션 */}
+        {/* 테이블 섹션 - 글래스모피즘 */}
         <Grid container spacing={3} mb={5}>
           {/* 플랫폼 테이블 */}
           <Grid item xs={12} md={6}>
             <Paper 
               sx={{ 
                 p: 3, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Box 
@@ -863,13 +892,14 @@ npm start`}
                   variant="h6" 
                   sx={{ 
                     fontWeight: 700, 
-                    color: DARK_COLORS.text.primary,
+                    color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1.5,
+                    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
                   }}
                 >
-                  <StorefrontIcon sx={{ color: DARK_COLORS.primary }} />
+                  <StorefrontIcon sx={{ color: 'white' }} />
                   플랫폼 상세 현황
                 </Typography>
                 <Button
@@ -878,11 +908,12 @@ npm start`}
                   endIcon={<OpenInNewIcon />}
                   onClick={() => setPlatformModalOpen(true)}
                   sx={{
-                    color: DARK_COLORS.primary,
-                    borderColor: DARK_COLORS.primary,
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    backdropFilter: 'blur(10px)',
                     '&:hover': {
-                      borderColor: DARK_COLORS.primary,
-                      bgcolor: alpha(DARK_COLORS.primary, 0.1),
+                      borderColor: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -893,19 +924,19 @@ npm start`}
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell sx={{ color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         플랫폼
                       </TableCell>
-                      <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         진행중
                       </TableCell>
-                      <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         예정
                       </TableCell>
-                      <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         종료
                       </TableCell>
-                      <TableCell align="center" sx={{ color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         전체
                       </TableCell>
                     </TableRow>
@@ -918,7 +949,7 @@ npm start`}
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           '&:hover': { 
-                            bgcolor: alpha(DARK_COLORS.primary, 0.08),
+                            bgcolor: 'rgba(255, 255, 255, 0.08)',
                           }
                         }}
                         onClick={() => {
@@ -928,63 +959,67 @@ npm start`}
                           navigate(`/search?channel=${platformCode}`);
                         }}
                       >
-                        <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Box display="flex" alignItems="center" gap={1.5}>
                             <Avatar 
                               sx={{ 
                                 width: 32, 
                                 height: 32, 
-                                bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
-                                color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                color: 'white',
                                 fontSize: '0.875rem',
                                 fontWeight: 700,
+                                backdropFilter: 'blur(10px)',
                               }}
                             >
                               {platform.platform.charAt(0)}
                             </Avatar>
-                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                            <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
                               {platform.platform}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={platform.active} 
                             size="small" 
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
-                              color: DARK_COLORS.secondary, 
+                              bgcolor: 'rgba(236, 72, 153, 0.3)', 
+                              color: 'white', 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                              border: `1px solid rgba(236, 72, 153, 0.5)`,
+                              backdropFilter: 'blur(10px)',
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={platform.pending} 
                             size="small" 
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.info, 0.15), 
-                              color: DARK_COLORS.info, 
+                              bgcolor: 'rgba(59, 130, 246, 0.3)', 
+                              color: 'white', 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                              border: `1px solid rgba(59, 130, 246, 0.5)`,
+                              backdropFilter: 'blur(10px)',
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={platform.ended} 
                             size="small" 
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
-                              color: DARK_COLORS.text.disabled, 
+                              bgcolor: 'rgba(255, 255, 255, 0.15)', 
+                              color: GLASS_COLORS.text.secondary, 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                              border: `1px solid rgba(255, 255, 255, 0.2)`,
+                              backdropFilter: 'blur(10px)',
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
-                          <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
+                          <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
                             {platform.total}
                           </Typography>
                         </TableCell>
@@ -1001,10 +1036,8 @@ npm start`}
             <Paper 
               sx={{ 
                 p: 3, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Box 
@@ -1019,13 +1052,14 @@ npm start`}
                   variant="h6" 
                   sx={{ 
                     fontWeight: 700, 
-                    color: DARK_COLORS.text.primary,
+                    color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 1.5,
+                    textShadow: '0 2px 10px rgba(0,0,0,0.3)',
                   }}
                 >
-                  <BusinessCenterIcon sx={{ color: DARK_COLORS.secondary }} />
+                  <BusinessCenterIcon sx={{ color: 'white' }} />
                   브랜드 상세 현황
                 </Typography>
                 <Button
@@ -1034,11 +1068,12 @@ npm start`}
                   endIcon={<OpenInNewIcon />}
                   onClick={() => setBrandModalOpen(true)}
                   sx={{
-                    color: DARK_COLORS.secondary,
-                    borderColor: DARK_COLORS.secondary,
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    backdropFilter: 'blur(10px)',
                     '&:hover': {
-                      borderColor: DARK_COLORS.secondary,
-                      bgcolor: alpha(DARK_COLORS.secondary, 0.1),
+                      borderColor: 'rgba(255, 255, 255, 0.6)',
+                      bgcolor: 'rgba(255, 255, 255, 0.1)',
                     }
                   }}
                 >
@@ -1049,19 +1084,19 @@ npm start`}
                 <Table stickyHeader>
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ bgcolor: DARK_COLORS.cardBg, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         브랜드
                       </TableCell>
-                      <TableCell align="center" sx={{ bgcolor: DARK_COLORS.cardBg, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         진행중
                       </TableCell>
-                      <TableCell align="center" sx={{ bgcolor: DARK_COLORS.cardBg, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         예정
                       </TableCell>
-                      <TableCell align="center" sx={{ bgcolor: DARK_COLORS.cardBg, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         종료
                       </TableCell>
-                      <TableCell align="center" sx={{ bgcolor: DARK_COLORS.cardBg, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                      <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                         전체
                       </TableCell>
                     </TableRow>
@@ -1074,95 +1109,96 @@ npm start`}
                           cursor: 'pointer',
                           transition: 'all 0.2s',
                           '&:hover': { 
-                            bgcolor: alpha(DARK_COLORS.secondary, 0.08),
+                            bgcolor: 'rgba(255, 255, 255, 0.08)',
                           }
                         }}
                         onClick={() => navigate(`/search?brand=${brand.brand}`)}
                       >
-                        <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Box display="flex" alignItems="center" gap={1.5}>
                             <Avatar 
                               sx={{ 
                                 width: 32, 
                                 height: 32, 
-                                bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
-                                color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                                background: 'rgba(255, 255, 255, 0.2)',
+                                color: 'white',
                                 fontSize: '0.875rem',
                                 fontWeight: 700,
+                                backdropFilter: 'blur(10px)',
                               }}
                             >
                               {brand.brand.charAt(0)}
                             </Avatar>
-                            <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                            <Typography variant="body2" sx={{ color: 'white', fontWeight: 600 }}>
                               {brand.brand}
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={brand.active} 
                             size="small" 
                             onClick={(e) => {
-                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              e.stopPropagation();
                               navigate(`/search?brand=${brand.brand}&status=ACTIVE`);
                             }}
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
-                              color: DARK_COLORS.secondary, 
+                              bgcolor: 'rgba(236, 72, 153, 0.3)', 
+                              color: 'white', 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                              border: `1px solid rgba(236, 72, 153, 0.5)`,
+                              backdropFilter: 'blur(10px)',
                               cursor: 'pointer',
                               '&:hover': {
-                                bgcolor: alpha(DARK_COLORS.secondary, 0.25),
-                                border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                                bgcolor: 'rgba(236, 72, 153, 0.5)',
                               },
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={brand.pending} 
                             size="small" 
                             onClick={(e) => {
-                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              e.stopPropagation();
                               navigate(`/search?brand=${brand.brand}&status=PENDING`);
                             }}
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.info, 0.15), 
-                              color: DARK_COLORS.info, 
+                              bgcolor: 'rgba(59, 130, 246, 0.3)', 
+                              color: 'white', 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                              border: `1px solid rgba(59, 130, 246, 0.5)`,
+                              backdropFilter: 'blur(10px)',
                               cursor: 'pointer',
                               '&:hover': {
-                                bgcolor: alpha(DARK_COLORS.info, 0.25),
-                                border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                                bgcolor: 'rgba(59, 130, 246, 0.5)',
                               },
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                           <Chip 
                             label={brand.ended} 
                             size="small" 
                             onClick={(e) => {
-                              e.stopPropagation(); // 행 클릭 이벤트 방지
+                              e.stopPropagation();
                               navigate(`/search?brand=${brand.brand}&status=ENDED`);
                             }}
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
-                              color: DARK_COLORS.text.disabled, 
+                              bgcolor: 'rgba(255, 255, 255, 0.15)', 
+                              color: GLASS_COLORS.text.secondary, 
                               fontWeight: 700,
-                              border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                              border: `1px solid rgba(255, 255, 255, 0.2)`,
+                              backdropFilter: 'blur(10px)',
                               cursor: 'pointer',
                               '&:hover': {
-                                bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
-                                border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                                bgcolor: 'rgba(255, 255, 255, 0.25)',
                               },
                             }}
                           />
                         </TableCell>
-                        <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
-                          <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                        <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
+                          <Typography variant="body2" sx={{ color: 'white', fontWeight: 700 }}>
                             {brand.total}
                           </Typography>
                         </TableCell>
@@ -1175,17 +1211,15 @@ npm start`}
           </Grid>
         </Grid>
         
-        {/* 최근 방송 현황 */}
+        {/* 최근 방송 현황 - 글래스모피즘 */}
         <Grid container spacing={3}>
           {/* 진행중인 방송 */}
           <Grid item xs={12} md={6}>
             <Paper 
               sx={{ 
                 p: 3, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Box display="flex" alignItems="center" mb={2.5}>
@@ -1194,20 +1228,22 @@ npm start`}
                     width: 40, 
                     height: 40, 
                     borderRadius: 2,
-                    background: `linear-gradient(135deg, ${alpha(DARK_COLORS.secondary, 0.2)} 0%, ${alpha(DARK_COLORS.secondary, 0.05)} 100%)`,
+                    background: 'rgba(236, 72, 153, 0.3)',
+                    backdropFilter: 'blur(10px)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     mr: 1.5,
+                    boxShadow: '0 4px 15px rgba(236, 72, 153, 0.2)',
                   }}
                 >
-                  <LiveTvIcon sx={{ color: DARK_COLORS.secondary }} />
+                  <LiveTvIcon sx={{ color: 'white' }} />
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: DARK_COLORS.text.primary }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   진행중인 라이브 방송
                 </Typography>
               </Box>
-              <Divider sx={{ borderColor: DARK_COLORS.border, mb: 2.5 }} />
+              <Divider sx={{ borderColor: GLASS_COLORS.border, mb: 2.5 }} />
               {recentActiveEvents.length > 0 ? (
                 <Stack spacing={2}>
                   {recentActiveEvents.map((event, index) => (
@@ -1216,22 +1252,24 @@ npm start`}
                       sx={{ 
                         p: 2.5, 
                         cursor: 'pointer',
-                        bgcolor: alpha(DARK_COLORS.secondary, 0.05),
-                        border: `1px solid ${alpha(DARK_COLORS.secondary, 0.2)}`,
+                        background: 'rgba(236, 72, 153, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                        border: `1px solid rgba(236, 72, 153, 0.3)`,
                         borderRadius: 2,
                         transition: 'all 0.3s',
                         '&:hover': { 
-                          boxShadow: `0 8px 24px ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                          boxShadow: '0 8px 32px rgba(236, 72, 153, 0.4)',
                           transform: 'translateY(-4px)',
-                          border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                          border: `1px solid rgba(236, 72, 153, 0.6)`,
+                          background: 'rgba(236, 72, 153, 0.2)',
                         }
                       }}
                       onClick={() => navigate(`/live/${event.event_id}`)}
                     >
-                      <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600, mb: 0.5 }}>
+                      <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}>
                         {event.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                      <Typography variant="caption" sx={{ color: GLASS_COLORS.text.secondary }}>
                         {event.channel_name} | {event.subtitle}
                       </Typography>
                       <Box mt={1.5} display="flex" gap={1} flexWrap="wrap">
@@ -1239,10 +1277,11 @@ npm start`}
                           label="🔴 LIVE" 
                           size="small" 
                           sx={{ 
-                            bgcolor: alpha(DARK_COLORS.secondary, 0.2), 
-                            color: DARK_COLORS.secondary,
+                            bgcolor: 'rgba(239, 68, 68, 0.3)', 
+                            color: 'white',
                             fontWeight: 700,
-                            border: `1px solid ${alpha(DARK_COLORS.secondary, 0.4)}`,
+                            border: `1px solid rgba(239, 68, 68, 0.5)`,
+                            backdropFilter: 'blur(10px)',
                           }} 
                         />
                         {event.tags && event.tags.slice(0, 2).map((tag, idx) => (
@@ -1251,9 +1290,10 @@ npm start`}
                             label={tag} 
                             size="small" 
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.primary, 0.1),
-                              color: DARK_COLORS.text.secondary,
-                              border: `1px solid ${DARK_COLORS.border}`,
+                              bgcolor: 'rgba(255, 255, 255, 0.15)',
+                              color: 'white',
+                              border: `1px solid rgba(255, 255, 255, 0.2)`,
+                              backdropFilter: 'blur(10px)',
                             }}
                           />
                         ))}
@@ -1262,7 +1302,7 @@ npm start`}
                   ))}
                 </Stack>
               ) : (
-                <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, textAlign: 'center', py: 4 }}>
                   진행중인 방송이 없습니다.
                 </Typography>
               )}
@@ -1274,10 +1314,8 @@ npm start`}
             <Paper 
               sx={{ 
                 p: 3, 
-                bgcolor: DARK_COLORS.cardBg,
-                border: `1px solid ${DARK_COLORS.border}`,
+                ...glassStyle,
                 borderRadius: 3,
-                boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)',
               }}
             >
               <Box display="flex" alignItems="center" mb={2.5}>
@@ -1286,20 +1324,22 @@ npm start`}
                     width: 40, 
                     height: 40, 
                     borderRadius: 2,
-                    background: `linear-gradient(135deg, ${alpha(DARK_COLORS.info, 0.2)} 0%, ${alpha(DARK_COLORS.info, 0.05)} 100%)`,
+                    background: 'rgba(59, 130, 246, 0.3)',
+                    backdropFilter: 'blur(10px)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     mr: 1.5,
+                    boxShadow: '0 4px 15px rgba(59, 130, 246, 0.2)',
                   }}
                 >
-                  <ScheduleIcon sx={{ color: DARK_COLORS.info }} />
+                  <ScheduleIcon sx={{ color: 'white' }} />
                 </Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: DARK_COLORS.text.primary }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
                   예정된 라이브 방송
                 </Typography>
               </Box>
-              <Divider sx={{ borderColor: DARK_COLORS.border, mb: 2.5 }} />
+              <Divider sx={{ borderColor: GLASS_COLORS.border, mb: 2.5 }} />
               {recentPendingEvents.length > 0 ? (
                 <Stack spacing={2}>
                   {recentPendingEvents.map((event, index) => (
@@ -1308,22 +1348,24 @@ npm start`}
                       sx={{ 
                         p: 2.5, 
                         cursor: 'pointer',
-                        bgcolor: alpha(DARK_COLORS.info, 0.05),
-                        border: `1px solid ${alpha(DARK_COLORS.info, 0.2)}`,
+                        background: 'rgba(59, 130, 246, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                        border: `1px solid rgba(59, 130, 246, 0.3)`,
                         borderRadius: 2,
                         transition: 'all 0.3s',
                         '&:hover': { 
-                          boxShadow: `0 8px 24px ${alpha(DARK_COLORS.info, 0.3)}`,
+                          boxShadow: '0 8px 32px rgba(59, 130, 246, 0.4)',
                           transform: 'translateY(-4px)',
-                          border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                          border: `1px solid rgba(59, 130, 246, 0.6)`,
+                          background: 'rgba(59, 130, 246, 0.2)',
                         }
                       }}
                       onClick={() => navigate(`/live/${event.event_id}`)}
                     >
-                      <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600, mb: 0.5 }}>
+                      <Typography variant="body1" sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}>
                         {event.title}
                       </Typography>
-                      <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                      <Typography variant="caption" sx={{ color: GLASS_COLORS.text.secondary }}>
                         {event.channel_name} | {event.start_date}
                       </Typography>
                       <Box mt={1.5} display="flex" gap={1} flexWrap="wrap">
@@ -1331,10 +1373,11 @@ npm start`}
                           label="📅 예정" 
                           size="small" 
                           sx={{ 
-                            bgcolor: alpha(DARK_COLORS.info, 0.2), 
-                            color: DARK_COLORS.info,
+                            bgcolor: 'rgba(59, 130, 246, 0.3)', 
+                            color: 'white',
                             fontWeight: 700,
-                            border: `1px solid ${alpha(DARK_COLORS.info, 0.4)}`,
+                            border: `1px solid rgba(59, 130, 246, 0.5)`,
+                            backdropFilter: 'blur(10px)',
                           }} 
                         />
                         {event.tags && event.tags.slice(0, 2).map((tag, idx) => (
@@ -1343,9 +1386,10 @@ npm start`}
                             label={tag} 
                             size="small" 
                             sx={{ 
-                              bgcolor: alpha(DARK_COLORS.primary, 0.1),
-                              color: DARK_COLORS.text.secondary,
-                              border: `1px solid ${DARK_COLORS.border}`,
+                              bgcolor: 'rgba(255, 255, 255, 0.15)',
+                              color: 'white',
+                              border: `1px solid rgba(255, 255, 255, 0.2)`,
+                              backdropFilter: 'blur(10px)',
                             }}
                           />
                         ))}
@@ -1354,7 +1398,7 @@ npm start`}
                   ))}
                 </Stack>
               ) : (
-                <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary, textAlign: 'center', py: 4 }}>
+                <Typography variant="body2" sx={{ color: GLASS_COLORS.text.secondary, textAlign: 'center', py: 4 }}>
                   예정된 방송이 없습니다.
                 </Typography>
               )}
@@ -1363,7 +1407,7 @@ npm start`}
         </Grid>
       </Container>
       
-      {/* 플랫폼 전체 보기 모달 */}
+      {/* 플랫폼 전체 보기 모달 - 글래스모피즘 */}
       <Dialog
         open={platformModalOpen}
         onClose={() => setPlatformModalOpen(false)}
@@ -1371,17 +1415,17 @@ npm start`}
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: DARK_COLORS.cardBg,
+            ...glassStyle,
             backgroundImage: 'none',
-            border: `1px solid ${DARK_COLORS.border}`,
           }
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: DARK_COLORS.background,
-            color: DARK_COLORS.text.primary,
-            borderBottom: `1px solid ${DARK_COLORS.border}`,
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            borderBottom: `1px solid ${GLASS_COLORS.border}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1389,14 +1433,14 @@ npm start`}
           }}
         >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <StorefrontIcon sx={{ color: DARK_COLORS.primary }} />
+            <StorefrontIcon sx={{ color: 'white' }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               전체 플랫폼 목록
             </Typography>
           </Box>
           <IconButton
             onClick={() => setPlatformModalOpen(false)}
-            sx={{ color: DARK_COLORS.text.secondary }}
+            sx={{ color: 'white' }}
           >
             <CloseIcon />
           </IconButton>
@@ -1406,19 +1450,19 @@ npm start`}
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     플랫폼
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     진행중
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     예정
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     종료
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     전체
                   </TableCell>
                 </TableRow>
@@ -1431,7 +1475,7 @@ npm start`}
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       '&:hover': { 
-                        bgcolor: alpha(DARK_COLORS.primary, 0.08),
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                       }
                     }}
                     onClick={() => {
@@ -1441,31 +1485,32 @@ npm start`}
                       setPlatformModalOpen(false);
                     }}
                   >
-                    <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Box display="flex" alignItems="center" gap={1.5}>
                         <Avatar 
                           sx={{ 
                             width: 40, 
                             height: 40, 
-                            bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
-                            color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            color: 'white',
                             fontSize: '1rem',
                             fontWeight: 700,
+                            backdropFilter: 'blur(10px)',
                           }}
                         >
                           {platform.platform.charAt(0)}
                         </Avatar>
                         <Box>
-                          <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                          <Typography variant="body1" sx={{ color: 'white', fontWeight: 600 }}>
                             {platform.platform}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                          <Typography variant="caption" sx={{ color: GLASS_COLORS.text.secondary }}>
                             총 {platform.total}개 방송
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={platform.active} 
                         size="medium"
@@ -1477,20 +1522,20 @@ npm start`}
                           setPlatformModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
-                          color: DARK_COLORS.secondary, 
+                          bgcolor: 'rgba(236, 72, 153, 0.3)', 
+                          color: 'white', 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                          border: `1px solid rgba(236, 72, 153, 0.5)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.secondary, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                            bgcolor: 'rgba(236, 72, 153, 0.5)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={platform.pending} 
                         size="medium"
@@ -1502,20 +1547,20 @@ npm start`}
                           setPlatformModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.info, 0.15), 
-                          color: DARK_COLORS.info, 
+                          bgcolor: 'rgba(59, 130, 246, 0.3)', 
+                          color: 'white', 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                          border: `1px solid rgba(59, 130, 246, 0.5)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.info, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                            bgcolor: 'rgba(59, 130, 246, 0.5)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={platform.ended} 
                         size="medium"
@@ -1527,21 +1572,21 @@ npm start`}
                           setPlatformModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
-                          color: DARK_COLORS.text.disabled, 
+                          bgcolor: 'rgba(255, 255, 255, 0.15)', 
+                          color: GLASS_COLORS.text.secondary, 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                          border: `1px solid rgba(255, 255, 255, 0.2)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
-                      <Typography variant="h6" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
+                      <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
                         {platform.total}
                       </Typography>
                     </TableCell>
@@ -1553,7 +1598,7 @@ npm start`}
         </DialogContent>
       </Dialog>
       
-      {/* 브랜드 전체 보기 모달 */}
+      {/* 브랜드 전체 보기 모달 - 글래스모피즘 */}
       <Dialog
         open={brandModalOpen}
         onClose={() => setBrandModalOpen(false)}
@@ -1561,17 +1606,17 @@ npm start`}
         fullWidth
         PaperProps={{
           sx: {
-            bgcolor: DARK_COLORS.cardBg,
+            ...glassStyle,
             backgroundImage: 'none',
-            border: `1px solid ${DARK_COLORS.border}`,
           }
         }}
       >
         <DialogTitle
           sx={{
-            bgcolor: DARK_COLORS.background,
-            color: DARK_COLORS.text.primary,
-            borderBottom: `1px solid ${DARK_COLORS.border}`,
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(10px)',
+            color: 'white',
+            borderBottom: `1px solid ${GLASS_COLORS.border}`,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -1579,14 +1624,14 @@ npm start`}
           }}
         >
           <Box display="flex" alignItems="center" gap={1.5}>
-            <BusinessCenterIcon sx={{ color: DARK_COLORS.secondary }} />
+            <BusinessCenterIcon sx={{ color: 'white' }} />
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
               전체 브랜드 목록
             </Typography>
           </Box>
           <IconButton
             onClick={() => setBrandModalOpen(false)}
-            sx={{ color: DARK_COLORS.text.secondary }}
+            sx={{ color: 'white' }}
           >
             <CloseIcon />
           </IconButton>
@@ -1596,19 +1641,19 @@ npm start`}
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     브랜드
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     진행중
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     예정
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     종료
                   </TableCell>
-                  <TableCell align="center" sx={{ bgcolor: DARK_COLORS.background, color: DARK_COLORS.text.secondary, fontWeight: 600, borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                  <TableCell align="center" sx={{ bgcolor: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', color: 'white', fontWeight: 600, borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                     전체
                   </TableCell>
                 </TableRow>
@@ -1621,7 +1666,7 @@ npm start`}
                       cursor: 'pointer',
                       transition: 'all 0.2s',
                       '&:hover': { 
-                        bgcolor: alpha(DARK_COLORS.secondary, 0.08),
+                        bgcolor: 'rgba(255, 255, 255, 0.08)',
                       }
                     }}
                     onClick={() => {
@@ -1629,31 +1674,32 @@ npm start`}
                       setBrandModalOpen(false);
                     }}
                   >
-                    <TableCell sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Box display="flex" alignItems="center" gap={1.5}>
                         <Avatar 
                           sx={{ 
                             width: 40, 
                             height: 40, 
-                            bgcolor: alpha(DARK_COLORS.chart[index % DARK_COLORS.chart.length], 0.2),
-                            color: DARK_COLORS.chart[index % DARK_COLORS.chart.length],
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            color: 'white',
                             fontSize: '1rem',
                             fontWeight: 700,
+                            backdropFilter: 'blur(10px)',
                           }}
                         >
                           {brand.brand.charAt(0)}
                         </Avatar>
                         <Box>
-                          <Typography variant="body1" sx={{ color: DARK_COLORS.text.primary, fontWeight: 600 }}>
+                          <Typography variant="body1" sx={{ color: 'white', fontWeight: 600 }}>
                             {brand.brand}
                           </Typography>
-                          <Typography variant="caption" sx={{ color: DARK_COLORS.text.secondary }}>
+                          <Typography variant="caption" sx={{ color: GLASS_COLORS.text.secondary }}>
                             총 {brand.total}개 방송
                           </Typography>
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={brand.active} 
                         size="medium"
@@ -1663,20 +1709,20 @@ npm start`}
                           setBrandModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.secondary, 0.15), 
-                          color: DARK_COLORS.secondary, 
+                          bgcolor: 'rgba(236, 72, 153, 0.3)', 
+                          color: 'white', 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.secondary, 0.3)}`,
+                          border: `1px solid rgba(236, 72, 153, 0.5)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.secondary, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.secondary, 0.5)}`,
+                            bgcolor: 'rgba(236, 72, 153, 0.5)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={brand.pending} 
                         size="medium"
@@ -1686,20 +1732,20 @@ npm start`}
                           setBrandModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.info, 0.15), 
-                          color: DARK_COLORS.info, 
+                          bgcolor: 'rgba(59, 130, 246, 0.3)', 
+                          color: 'white', 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.info, 0.3)}`,
+                          border: `1px solid rgba(59, 130, 246, 0.5)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.info, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.info, 0.5)}`,
+                            bgcolor: 'rgba(59, 130, 246, 0.5)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
                       <Chip 
                         label={brand.ended} 
                         size="medium"
@@ -1709,21 +1755,21 @@ npm start`}
                           setBrandModalOpen(false);
                         }}
                         sx={{ 
-                          bgcolor: alpha(DARK_COLORS.text.disabled, 0.15), 
-                          color: DARK_COLORS.text.disabled, 
+                          bgcolor: 'rgba(255, 255, 255, 0.15)', 
+                          color: GLASS_COLORS.text.secondary, 
                           fontWeight: 700,
                           fontSize: '0.875rem',
-                          border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.3)}`,
+                          border: `1px solid rgba(255, 255, 255, 0.2)`,
+                          backdropFilter: 'blur(10px)',
                           cursor: 'pointer',
                           '&:hover': {
-                            bgcolor: alpha(DARK_COLORS.text.disabled, 0.25),
-                            border: `1px solid ${alpha(DARK_COLORS.text.disabled, 0.5)}`,
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
                           }
                         }}
                       />
                     </TableCell>
-                    <TableCell align="center" sx={{ borderBottom: `1px solid ${DARK_COLORS.border}` }}>
-                      <Typography variant="h6" sx={{ color: DARK_COLORS.text.primary, fontWeight: 700 }}>
+                    <TableCell align="center" sx={{ borderBottom: `1px solid ${GLASS_COLORS.border}` }}>
+                      <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
                         {brand.total}
                       </Typography>
                     </TableCell>
