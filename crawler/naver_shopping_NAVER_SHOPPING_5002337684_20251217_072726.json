@@ -1,0 +1,947 @@
+{
+  "platform": "네이버스마트스토어",
+  "brand": "아이오페",
+  "url": "https://brand.naver.com/iope/shoppingstory/detail?id=5002337684",
+  "event_id": "NAVER_SHOPPING_5002337684",
+  "title": "아이오페 XMD스템3 세럼_최대혜택 프로모션 (UP TO 40%+추가혜택+LIVE)",
+  "date_info": "23.10.30~23.11.14",
+  "benefits": [
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "샘플링 시크릿혜택_슈바_7천원 - 7,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 7000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "샘플링 시크릿혜택_슈바_7천원 - 7,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 7000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD스템3 라인쿠폰_4천원(세럼,크림,2종) - 4,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 4000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD스템3 라인쿠폰_4천원(세럼,크림,2종) - 4,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 4000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD세럼_첫구매고객2_3,000원(7만원↑) - 3,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 3000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD스템3 세럼_라운지쿠폰2_2천원(7만원 ↑) - 2,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 2000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD세럼_첫구매고객1_2,000원(4만원↑) - 2,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 2000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "XMD스템3 세럼_라운지쿠폰1_1천원(4만원 ↑) - 1,000원 할인 (PRODUCT 쿠폰)",
+      "benefit_value": 1000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "스템3라이브_장바구니2_6천원(12만원↑) - 6,000원 할인 (ORDER 쿠폰)",
+      "benefit_value": 6000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "스템3_장바구니3_5천원(12만원↑) - 5,000원 할인 (ORDER 쿠폰)",
+      "benefit_value": 5000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "스템3라이브_장바구니2_4천원(10만원↑) - 4,000원 할인 (ORDER 쿠폰)",
+      "benefit_value": 4000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "스템3_장바구니2_3천원(10만원↑) - 3,000원 할인 (ORDER 쿠폰)",
+      "benefit_value": 3000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    },
+    {
+      "type": "금액대별 혜택",
+      "condition": "전 구매 고객",
+      "benefit": "스템3_장바구니1_2천원(8만원↑) - 2,000원 할인 (ORDER 쿠폰)",
+      "benefit_value": 2000,
+      "min_order_amount": 0,
+      "source": "JSON"
+    }
+  ],
+  "coupons": [
+    {
+      "type": "쿠폰",
+      "name": "샘플링 시크릿혜택_슈바_7천원",
+      "description": "90,000원 이상 구매시 7,000원 할인 (PRODUCT)",
+      "benefit_value": 7000,
+      "min_order_amount": 90000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "샘플링 시크릿혜택_슈바_7천원",
+      "description": "90,000원 이상 구매시 7,000원 할인 (PRODUCT)",
+      "benefit_value": 7000,
+      "min_order_amount": 90000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD스템3 라인쿠폰_4천원(세럼,크림,2종)",
+      "description": "10,000원 이상 구매시 4,000원 할인 (PRODUCT)",
+      "benefit_value": 4000,
+      "min_order_amount": 10000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD스템3 라인쿠폰_4천원(세럼,크림,2종)",
+      "description": "10,000원 이상 구매시 4,000원 할인 (PRODUCT)",
+      "benefit_value": 4000,
+      "min_order_amount": 10000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD세럼_첫구매고객2_3,000원(7만원↑)",
+      "description": "70,000원 이상 구매시 3,000원 할인 (PRODUCT)",
+      "benefit_value": 3000,
+      "min_order_amount": 70000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD스템3 세럼_라운지쿠폰2_2천원(7만원 ↑)",
+      "description": "70,000원 이상 구매시 2,000원 할인 (PRODUCT)",
+      "benefit_value": 2000,
+      "min_order_amount": 70000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD세럼_첫구매고객1_2,000원(4만원↑)",
+      "description": "40,000원 이상 구매시 2,000원 할인 (PRODUCT)",
+      "benefit_value": 2000,
+      "min_order_amount": 40000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "XMD스템3 세럼_라운지쿠폰1_1천원(4만원 ↑)",
+      "description": "40,000원 이상 구매시 1,000원 할인 (PRODUCT)",
+      "benefit_value": 1000,
+      "min_order_amount": 40000,
+      "coupon_kind": "PRODUCT",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "스템3라이브_장바구니2_6천원(12만원↑)",
+      "description": "120,000원 이상 구매시 6,000원 할인 (ORDER)",
+      "benefit_value": 6000,
+      "min_order_amount": 120000,
+      "coupon_kind": "ORDER",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "스템3_장바구니3_5천원(12만원↑)",
+      "description": "120,000원 이상 구매시 5,000원 할인 (ORDER)",
+      "benefit_value": 5000,
+      "min_order_amount": 120000,
+      "coupon_kind": "ORDER",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "스템3라이브_장바구니2_4천원(10만원↑)",
+      "description": "100,000원 이상 구매시 4,000원 할인 (ORDER)",
+      "benefit_value": 4000,
+      "min_order_amount": 100000,
+      "coupon_kind": "ORDER",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "스템3_장바구니2_3천원(10만원↑)",
+      "description": "100,000원 이상 구매시 3,000원 할인 (ORDER)",
+      "benefit_value": 3000,
+      "min_order_amount": 100000,
+      "coupon_kind": "ORDER",
+      "source": "JSON"
+    },
+    {
+      "type": "쿠폰",
+      "name": "스템3_장바구니1_2천원(8만원↑)",
+      "description": "80,000원 이상 구매시 2,000원 할인 (ORDER)",
+      "benefit_value": 2000,
+      "min_order_amount": 80000,
+      "coupon_kind": "ORDER",
+      "source": "JSON"
+    }
+  ],
+  "products": [
+    {
+      "product_order": 1,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 2종 기획세트 (소프너 150ml + 에멀젼 150ml)",
+      "product_url": "https://brand.naver.com/products/5240107640",
+      "original_price": 139000,
+      "sale_price": 111200,
+      "discount_rate": 20,
+      "source": "JSON"
+    },
+    {
+      "product_order": 2,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 크림 50ml",
+      "product_url": "https://brand.naver.com/products/5237425925",
+      "original_price": 130000,
+      "sale_price": 106600,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 3,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 오일 블렌딩 세럼 40ml 기획세트",
+      "product_url": "https://brand.naver.com/products/5240147110",
+      "original_price": 135000,
+      "sale_price": 110700,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 4,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 아이크림 25ml",
+      "product_url": "https://brand.naver.com/products/5240181315",
+      "original_price": 85000,
+      "sale_price": 65450,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 5,
+      "product_name": "[네이버 단독] 아이오페 레티놀 데이&나이트 세트 (슈퍼 바운스 세럼 50ml + 레티놀 레티젝션 세럼 50ml)",
+      "product_url": "https://brand.naver.com/products/12569083196",
+      "original_price": 171000,
+      "sale_price": 135090,
+      "discount_rate": 21,
+      "source": "JSON"
+    },
+    {
+      "product_order": 6,
+      "product_name": "NEW 아이오페 XMD 스템3 클리니컬 리커버리 세럼 50ml",
+      "product_url": "https://brand.naver.com/products/11868202014",
+      "original_price": 95000,
+      "sale_price": 80750,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 7,
+      "product_name": "[네이버 단독] 아이오페 XMD스템3 세럼 50ml + 레티놀 레티젝션 세럼 50ml",
+      "product_url": "https://brand.naver.com/products/12701915965",
+      "original_price": 183000,
+      "sale_price": 148230,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 8,
+      "product_name": "NEW 아이오페 XMD 스템3 클리니컬 리커버리 크림 50ml",
+      "product_url": "https://brand.naver.com/products/11868219142",
+      "original_price": 80000,
+      "sale_price": 68000,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 9,
+      "product_name": "아이오페 XMD 스템3 스페셜 2종 세트 (소프너 130ml + 에멀젼 130ml)",
+      "product_url": "https://brand.naver.com/products/11868243224",
+      "original_price": 95000,
+      "sale_price": 71250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 10,
+      "product_name": "아이오페 레티놀 슈퍼 바운스 세럼 50ml, 1개",
+      "product_url": "https://brand.naver.com/products/8390872165",
+      "original_price": 83000,
+      "sale_price": 67230,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 11,
+      "product_name": "아이오페 레티놀 레티젝션 세럼 50ml, 1개",
+      "product_url": "https://brand.naver.com/products/12180929794",
+      "original_price": 88000,
+      "sale_price": 71280,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 12,
+      "product_name": "아이오페 레티놀 엑스퍼트 0.1% 링클 코렉터 30ml 기획세트",
+      "product_url": "https://brand.naver.com/products/6116759523",
+      "original_price": 90000,
+      "sale_price": 72900,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 13,
+      "product_name": "아이오페 레티놀 엑스퍼트 0.3% 링클 코렉터 20ml 특별 구성",
+      "product_url": "https://brand.naver.com/products/7640660752",
+      "original_price": 125000,
+      "sale_price": 101250,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 14,
+      "product_name": "아이오페 레티놀 슈퍼 바운스 세럼 50ml 기획세트 + 레티놀 0.1% 30ml 기획세트 (총 기획세트 2종)",
+      "product_url": "https://brand.naver.com/products/11640476029",
+      "original_price": 173000,
+      "sale_price": 140130,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 15,
+      "product_name": "아이오페 레티놀 세럼 인 겔 마스크 세트 7매, 1개",
+      "product_url": "https://brand.naver.com/products/11470848185",
+      "original_price": 52500,
+      "sale_price": 37800,
+      "discount_rate": 28,
+      "source": "JSON"
+    },
+    {
+      "product_order": 16,
+      "product_name": "아이오페 비타민C 엑스퍼트 25% 항산화 토닝 앰플 23ml (미백 기능성)",
+      "product_url": "https://brand.naver.com/products/5548614896",
+      "original_price": 55000,
+      "sale_price": 42350,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 17,
+      "product_name": "아이오페 비타민C 엑스퍼트 40% 마스크 컨센트레이트 15g (미백/주름개선 기능성)",
+      "product_url": "https://brand.naver.com/products/11470874470",
+      "original_price": 59000,
+      "sale_price": 48380,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 18,
+      "product_name": "아이오페 기미 브라이트닝 에센스 45ml",
+      "product_url": "https://brand.naver.com/products/11281442912",
+      "original_price": 70000,
+      "sale_price": 53900,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 19,
+      "product_name": "아이오페 바이오 컨디셔닝 에센스 168ml",
+      "product_url": "https://brand.naver.com/products/5518520585",
+      "original_price": 60000,
+      "sale_price": 45000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 20,
+      "product_name": "NEW 아이오페 멀티 비타민 10% 토닝 겔 마스크 30G 5매 세트",
+      "product_url": "https://brand.naver.com/products/12569086609",
+      "original_price": 35000,
+      "sale_price": 22750,
+      "discount_rate": 35,
+      "source": "JSON"
+    },
+    {
+      "product_order": 21,
+      "product_name": "아이오페 맨 2종 선물 세트",
+      "product_url": "https://brand.naver.com/products/5229417099",
+      "original_price": 78000,
+      "sale_price": 58500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 22,
+      "product_name": "아이오페 맨 올데이 퍼펙트 톤업 올인원 120ml / SPF15",
+      "product_url": "https://brand.naver.com/products/5229397592",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 23,
+      "product_name": "아이오페 맨 올데이 퍼펙트 올인원 120ml",
+      "product_url": "https://brand.naver.com/products/5229388351",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 24,
+      "product_name": "NEW 아이오페 XMD 스템3 클리니컬 리커버리 세럼 50ml",
+      "product_url": "https://brand.naver.com/products/11868202014",
+      "original_price": 95000,
+      "sale_price": 80750,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 25,
+      "product_name": "아이오페 레티놀 레티젝션 세럼 50ml, 1개",
+      "product_url": "https://brand.naver.com/products/12180929794",
+      "original_price": 88000,
+      "sale_price": 71280,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 26,
+      "product_name": "아이오페 레티놀 슈퍼 바운스 세럼 50ml, 1개",
+      "product_url": "https://brand.naver.com/products/8390872165",
+      "original_price": 83000,
+      "sale_price": 67230,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 27,
+      "product_name": "아이오페 레티놀 엑스퍼트 0.1% 링클 코렉터 30ml 기획세트",
+      "product_url": "https://brand.naver.com/products/6116759523",
+      "original_price": 90000,
+      "sale_price": 72900,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 28,
+      "product_name": "아이오페 레티놀 엑스퍼트 0.3% 링클 코렉터 20ml 특별 구성",
+      "product_url": "https://brand.naver.com/products/7640660752",
+      "original_price": 125000,
+      "sale_price": 101250,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 29,
+      "product_name": "아이오페 PDRN 카페인샷 앰플 50ml (PDRN 38% / 카페인 20,000ppm)",
+      "product_url": "https://brand.naver.com/products/8039489270",
+      "original_price": 80000,
+      "sale_price": 60000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 30,
+      "product_name": "아이오페 레티놀 레티젝션 세럼 30ml, 1개",
+      "product_url": "https://brand.naver.com/products/12299115715",
+      "original_price": 59000,
+      "sale_price": 47790,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 31,
+      "product_name": "아이오페 XMD 스템3 세럼 30ml 듀오 (30ml+30ml)",
+      "product_url": "https://brand.naver.com/products/12200450679",
+      "original_price": 126000,
+      "sale_price": 107100,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 32,
+      "product_name": "[라운지 전용] 아이오페 XMD 스템3 세럼 30ml",
+      "product_url": "https://brand.naver.com/products/12200438087",
+      "original_price": 63000,
+      "sale_price": 53550,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 33,
+      "product_name": "[라운지 전용] 아이오페 PDRN 카페인샷 30ml (소용량)",
+      "product_url": "https://brand.naver.com/products/11873122448",
+      "original_price": 50000,
+      "sale_price": 40000,
+      "discount_rate": 20,
+      "source": "JSON"
+    },
+    {
+      "product_order": 34,
+      "product_name": "아이오페 XMD 스템3 스페셜 2종 세트 (소프너 130ml + 에멀젼 130ml)",
+      "product_url": "https://brand.naver.com/products/11868243224",
+      "original_price": 95000,
+      "sale_price": 71250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 35,
+      "product_name": "NEW 아이오페 XMD 스템3 클리니컬 리커버리 에멀전 130ml",
+      "product_url": "https://brand.naver.com/products/11868238437",
+      "original_price": 48000,
+      "sale_price": 36000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 36,
+      "product_name": "NEW 아이오페  XMD스템3 클리니컬 리커버리 소프너 130ml",
+      "product_url": "https://brand.naver.com/products/11868232294",
+      "original_price": 47000,
+      "sale_price": 35250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 37,
+      "product_name": "NEW 아이오페 XMD 스템3 클리니컬 리커버리 크림 50ml",
+      "product_url": "https://brand.naver.com/products/11868219142",
+      "original_price": 80000,
+      "sale_price": 68000,
+      "discount_rate": 15,
+      "source": "JSON"
+    },
+    {
+      "product_order": 38,
+      "product_name": "아이오페 레티놀 세럼 인 겔 마스크 세트 7매, 2개",
+      "product_url": "https://brand.naver.com/products/11809928905",
+      "original_price": 105000,
+      "sale_price": 73500,
+      "discount_rate": 30,
+      "source": "JSON"
+    },
+    {
+      "product_order": 39,
+      "product_name": "아이오페 레티놀 슈퍼 바운스 세럼 50ml 기획세트 + 레티놀 0.1% 30ml 기획세트 (총 기획세트 2종)",
+      "product_url": "https://brand.naver.com/products/11640476029",
+      "original_price": 173000,
+      "sale_price": 140130,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 40,
+      "product_name": "아이오페 비타민C 엑스퍼트 40% 마스크 컨센트레이트 15g (미백/주름개선 기능성)",
+      "product_url": "https://brand.naver.com/products/11470874470",
+      "original_price": 59000,
+      "sale_price": 48380,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 41,
+      "product_name": "NEW 레티놀 세럼 인 겔 마스크 (1매)",
+      "product_url": "https://brand.naver.com/products/11470859722",
+      "original_price": 7500,
+      "sale_price": 5400,
+      "discount_rate": 28,
+      "source": "JSON"
+    },
+    {
+      "product_order": 42,
+      "product_name": "아이오페 레티놀 세럼 인 겔 마스크 세트 7매, 1개",
+      "product_url": "https://brand.naver.com/products/11470848185",
+      "original_price": 52500,
+      "sale_price": 37800,
+      "discount_rate": 28,
+      "source": "JSON"
+    },
+    {
+      "product_order": 43,
+      "product_name": "[라운지 고객전용] 아이오페 맨 올데이 퍼펙트 올인원 120ml + 톤업 올인원 120ml",
+      "product_url": "https://brand.naver.com/products/11356275894",
+      "original_price": 76000,
+      "sale_price": 53200,
+      "discount_rate": 30,
+      "source": "JSON"
+    },
+    {
+      "product_order": 44,
+      "product_name": "[라운지 전용] 아이오페 UV 선 프로텍터 50ml 2개 세트 SPF50+/PA++++",
+      "product_url": "https://brand.naver.com/products/11356264896",
+      "original_price": 76000,
+      "sale_price": 53200,
+      "discount_rate": 30,
+      "source": "JSON"
+    },
+    {
+      "product_order": 45,
+      "product_name": "[라운지 전용] 아이오페 레티놀 바운스 세럼 30ml + 선 프로텍터 50ml 세트",
+      "product_url": "https://brand.naver.com/products/11356214879",
+      "original_price": 88000,
+      "sale_price": 66000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 46,
+      "product_name": "아이오페 레티놀 슈퍼 바운스 세럼 50ml, 2개",
+      "product_url": "https://brand.naver.com/products/11341831384",
+      "original_price": 166000,
+      "sale_price": 134460,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 47,
+      "product_name": "아이오페 기미 브라이트닝 에센스 45ml",
+      "product_url": "https://brand.naver.com/products/11281442912",
+      "original_price": 70000,
+      "sale_price": 53900,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 48,
+      "product_name": "[라운지 전용] 아이오페 레티놀 슈퍼 바운스 세럼 30ml (모공탄력 / 자극도 0.0)",
+      "product_url": "https://brand.naver.com/products/11263401215",
+      "original_price": 50000,
+      "sale_price": 40500,
+      "discount_rate": 19,
+      "source": "JSON"
+    },
+    {
+      "product_order": 49,
+      "product_name": "아이오페 UV 쉴드 선 앰플 40ml SPF 50+ PA+++ (선앰플20ml+레티놀 세럼 10ml 포함 세트)",
+      "product_url": "https://brand.naver.com/products/10257699454",
+      "original_price": 40000,
+      "sale_price": 30000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 50,
+      "product_name": "아이오페 바이오 컨디셔닝 클렌징 오일 인 젤 150ml",
+      "product_url": "https://brand.naver.com/products/10003895954",
+      "original_price": 32000,
+      "sale_price": 24000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 51,
+      "product_name": "아이오페 스킨 부스터 앰플 필 패드 1매, 1개",
+      "product_url": "https://brand.naver.com/products/9988729201",
+      "original_price": 5000,
+      "sale_price": 3000,
+      "discount_rate": 40,
+      "source": "JSON"
+    },
+    {
+      "product_order": 52,
+      "product_name": "아이오페 바이오 컨디셔닝 에센스 폼 클렌징 180ml (저자극 / 워터 젤 폼)",
+      "product_url": "https://brand.naver.com/products/9930805246",
+      "original_price": 30000,
+      "sale_price": 22500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 53,
+      "product_name": "아이오페 UV쉴드 선 스틱 20g SPF50+/PA++++",
+      "product_url": "https://brand.naver.com/products/8435492271",
+      "original_price": 30000,
+      "sale_price": 22500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 54,
+      "product_name": "아이오페 맨 컴파운드 선 스크린 50ml SPF 50+ PA++++",
+      "product_url": "https://brand.naver.com/products/6562483490",
+      "original_price": 28000,
+      "sale_price": 21000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 55,
+      "product_name": "아이오페 맨 프로 레티놀 올인원 120ml 선물 세트",
+      "product_url": "https://brand.naver.com/products/6416241831",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 56,
+      "product_name": "아이오페 히아루로닉 크림 대용량 100ml",
+      "product_url": "https://brand.naver.com/products/5837580161",
+      "original_price": 55000,
+      "sale_price": 41250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 57,
+      "product_name": "아이오페 UV 쉴드 선 프로텍터 50ml SPF50+/PA++++",
+      "product_url": "https://brand.naver.com/products/5735980731",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 58,
+      "product_name": "아이오페 히아루로닉 스페셜 2종 세트",
+      "product_url": "https://brand.naver.com/products/5694568697",
+      "original_price": 57000,
+      "sale_price": 42750,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 59,
+      "product_name": "아이오페 맨 퍼펙트 올인원 클렌저 125ml",
+      "product_url": "https://brand.naver.com/products/5663627827",
+      "original_price": 18000,
+      "sale_price": 13500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 60,
+      "product_name": "아이오페 UV 쉴드 톤업 선 50ml SPF50+/PA++++",
+      "product_url": "https://brand.naver.com/products/5586756979",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 61,
+      "product_name": "아이오페 비타민C 엑스퍼트 25% 항산화 토닝 앰플 23ml (미백 기능성)",
+      "product_url": "https://brand.naver.com/products/5548614896",
+      "original_price": 55000,
+      "sale_price": 42350,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 62,
+      "product_name": "아이오페 바이오 컨디셔닝 에센스 168ml",
+      "product_url": "https://brand.naver.com/products/5518520585",
+      "original_price": 60000,
+      "sale_price": 45000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 63,
+      "product_name": "아이오페 에어쿠션 커버 15g (리필) SPF50+",
+      "product_url": "https://brand.naver.com/products/5447558766",
+      "original_price": 22000,
+      "sale_price": 16500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 64,
+      "product_name": "아이오페 에어쿠션 커버 15g (본품) SPF50+",
+      "product_url": "https://brand.naver.com/products/5375808719",
+      "original_price": 28000,
+      "sale_price": 21000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 65,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 에멀젼 150ml",
+      "product_url": "https://brand.naver.com/products/5279431843",
+      "original_price": 72000,
+      "sale_price": 54000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 66,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 소프너 150ml",
+      "product_url": "https://brand.naver.com/products/5279426691",
+      "original_price": 67000,
+      "sale_price": 50250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 67,
+      "product_name": "아이오페 슈퍼바이탈 쿠션 16g (리필) SPF45",
+      "product_url": "https://brand.naver.com/products/5241783439",
+      "original_price": 28000,
+      "sale_price": 21000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 68,
+      "product_name": "아이오페 슈퍼바이탈 쿠션 16gX2 (본품+리필) SPF45",
+      "product_url": "https://brand.naver.com/products/5240433745",
+      "original_price": 58000,
+      "sale_price": 43500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 69,
+      "product_name": "아이오페 프로 필링 소프트 젤 100ml",
+      "product_url": "https://brand.naver.com/products/5240398706",
+      "original_price": 30000,
+      "sale_price": 22500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 70,
+      "product_name": "아이오페 바이오 에센스 마스크 5매",
+      "product_url": "https://brand.naver.com/products/5240331249",
+      "original_price": 15000,
+      "sale_price": 11250,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 71,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 아이크림 25ml",
+      "product_url": "https://brand.naver.com/products/5240181315",
+      "original_price": 85000,
+      "sale_price": 65450,
+      "discount_rate": 23,
+      "source": "JSON"
+    },
+    {
+      "product_order": 72,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 오일 블렌딩 세럼 40ml 기획세트",
+      "product_url": "https://brand.naver.com/products/5240147110",
+      "original_price": 135000,
+      "sale_price": 110700,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 73,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 2종 기획세트 (소프너 150ml + 에멀젼 150ml)",
+      "product_url": "https://brand.naver.com/products/5240107640",
+      "original_price": 139000,
+      "sale_price": 111200,
+      "discount_rate": 20,
+      "source": "JSON"
+    },
+    {
+      "product_order": 74,
+      "product_name": "아이오페 NEW 6세대 슈퍼바이탈 크림 50ml",
+      "product_url": "https://brand.naver.com/products/5237425925",
+      "original_price": 130000,
+      "sale_price": 106600,
+      "discount_rate": 18,
+      "source": "JSON"
+    },
+    {
+      "product_order": 75,
+      "product_name": "아이오페 맨 안티에이징 에멀젼 EX 120ml",
+      "product_url": "https://brand.naver.com/products/5229455220",
+      "original_price": 36000,
+      "sale_price": 27000,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 76,
+      "product_name": "아이오페 맨 바이오 컨디셔닝 에센스 145ml",
+      "product_url": "https://brand.naver.com/products/5229448727",
+      "original_price": 42000,
+      "sale_price": 31500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 77,
+      "product_name": "아이오페 맨 2종 선물 세트",
+      "product_url": "https://brand.naver.com/products/5229417099",
+      "original_price": 78000,
+      "sale_price": 58500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 78,
+      "product_name": "아이오페 맨 올데이 퍼펙트 톤업 올인원 120ml / SPF15",
+      "product_url": "https://brand.naver.com/products/5229397592",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    },
+    {
+      "product_order": 79,
+      "product_name": "아이오페 맨 올데이 퍼펙트 올인원 120ml",
+      "product_url": "https://brand.naver.com/products/5229388351",
+      "original_price": 38000,
+      "sale_price": 28500,
+      "discount_rate": 25,
+      "source": "JSON"
+    }
+  ],
+  "collected_at": "2025-12-17T07:27:06.090040"
+}

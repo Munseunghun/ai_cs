@@ -382,11 +382,11 @@ const ExhibitionDetail = () => {
                     }
                   }}>
                     {/* 상품 이미지 */}
-                    {product.product_image && (
+                    {(product.product_image_url || product.product_image) && (
                       <CardMedia
                         component="img"
                         height="240"
-                        image={product.product_image}
+                        image={product.product_image_url || product.product_image}
                         alt={product.product_name || '상품 이미지'}
                         sx={{ 
                           objectFit: 'cover',

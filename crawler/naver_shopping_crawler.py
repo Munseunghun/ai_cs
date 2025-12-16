@@ -545,11 +545,18 @@ class NaverShoppingCrawler:
                             _v_discounted_price = _v_benefits_view.get('discountedSalePrice', 0)
                             _v_discount_ratio = _v_benefits_view.get('discountedRatio', 0)
                             
+                            # 상품 이미지 URL 추출
+                            _v_product_image = None
+                            _v_images = product.get('images', [])
+                            if _v_images and len(_v_images) > 0:
+                                _v_product_image = _v_images[0].get('url', '')
+                            
                             if _v_product_name:
                                 _v_products.append({
                                     'product_order': len(_v_products) + 1,
                                     'product_name': _v_product_name[:200],
                                     'product_url': _v_product_url,
+                                    'product_image': _v_product_image,
                                     'original_price': _v_sale_price if _v_sale_price > 0 else None,
                                     'sale_price': _v_discounted_price if _v_discounted_price > 0 else None,
                                     'discount_rate': _v_discount_ratio if _v_discount_ratio > 0 else None,
@@ -685,7 +692,8 @@ class NaverShoppingCrawler:
                         'original_price': product.get('original_price'),
                         'sale_price': product.get('sale_price'),
                         'discount_rate': product.get('discount_rate'),
-                        'product_url': product.get('product_url')
+                        'product_url': product.get('product_url'),
+                        'product_image_url': product.get('product_image')
                     }
                     try:
                         self.supabase.table('live_products').insert(_v_product_data).execute()
