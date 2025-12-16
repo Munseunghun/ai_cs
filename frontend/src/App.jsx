@@ -27,6 +27,7 @@ import SearchEvents from './pages/SearchEvents';
 import SearchExhibitions from './pages/SearchExhibitions';
 import LiveBroadcastDetail from './pages/LiveBroadcastDetail';
 import AdminPanel from './pages/AdminPanel';
+import EventDetail from './pages/EventDetail';
 
 // Material-UI 테마 설정 - 다우오피스 스타일 참고
 const theme = createTheme({
@@ -240,6 +241,7 @@ function App() {
               <Route path="/search" element={<SearchEvents />} />
               <Route path="/exhibitions" element={<SearchExhibitions />} />
               <Route path="/live/:liveId" element={<LiveBroadcastDetail />} />
+              <Route path="/events/:eventId" element={<EventDetail />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
