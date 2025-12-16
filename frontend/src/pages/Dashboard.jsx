@@ -754,16 +754,16 @@ npm start`}
                 <BarChart data={platformStats} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                   <defs>
                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.secondary} stopOpacity={0.9}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.secondary} stopOpacity={0.6}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.secondary} stopOpacity={0.9}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.secondary} stopOpacity={0.6}/>
                     </linearGradient>
                     <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.info} stopOpacity={0.9}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.info} stopOpacity={0.6}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.info} stopOpacity={0.9}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.info} stopOpacity={0.6}/>
                     </linearGradient>
                     <linearGradient id="colorEnded" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.5}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.2}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.text.disabled} stopOpacity={0.5}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.text.disabled} stopOpacity={0.2}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
@@ -828,16 +828,16 @@ npm start`}
                 <BarChart data={brandStats} margin={{ top: 20, right: 20, left: 0, bottom: 60 }}>
                   <defs>
                     <linearGradient id="colorActive2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.secondary} stopOpacity={0.9}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.secondary} stopOpacity={0.6}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.secondary} stopOpacity={0.9}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.secondary} stopOpacity={0.6}/>
                     </linearGradient>
                     <linearGradient id="colorPending2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.info} stopOpacity={0.9}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.info} stopOpacity={0.6}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.info} stopOpacity={0.9}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.info} stopOpacity={0.6}/>
                     </linearGradient>
                     <linearGradient id="colorEnded2" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.5}/>
-                      <stop offset="100%" stopColor={DARK_COLORS.text.disabled} stopOpacity={0.2}/>
+                      <stop offset="0%" stopColor={GLASS_COLORS.text.disabled} stopOpacity={0.5}/>
+                      <stop offset="100%" stopColor={GLASS_COLORS.text.disabled} stopOpacity={0.2}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" vertical={false} />
