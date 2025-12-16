@@ -154,10 +154,12 @@ const SearchEvents = () => {
     }
   };
   
-  // 플랫폼 목록 로드
+  // 플랫폼 목록 로드 (네이버 스마트스토어 제외)
   useEffect(() => {
     const platforms = getPlatforms();
-    const options = getPlatformFilterOptions();
+    const allOptions = getPlatformFilterOptions();
+    // 네이버 스마트스토어 제외 (Live 방송 조회에서는 제외)
+    const options = allOptions.filter(opt => opt.value !== 'NAVER_SHOPPING');
     setPlatformOptions(options);
   }, []);
   

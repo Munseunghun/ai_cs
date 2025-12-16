@@ -154,10 +154,13 @@ const SearchExhibitions = () => {
     }
   };
   
-  // 플랫폼 목록 로드
+  // 플랫폼 목록 로드 (네이버 스마트스토어만 표시)
   useEffect(() => {
-    const platforms = getPlatforms();
-    const options = getPlatformFilterOptions();
+    // 입점몰 이벤트, 전시 조회에서는 네이버 스마트스토어만 표시
+    const options = [
+      { value: '', label: '전체' },
+      { value: 'NAVER_SHOPPING', label: '네이버스마트스토어' }
+    ];
     setPlatformOptions(options);
   }, []);
   
