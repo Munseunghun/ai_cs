@@ -26,6 +26,7 @@ import Dashboard from './pages/Dashboard';
 import SearchEvents from './pages/SearchEvents';
 import SearchExhibitions from './pages/SearchExhibitions';
 import LiveBroadcastDetail from './pages/LiveBroadcastDetail';
+import ExhibitionDetail from './pages/ExhibitionDetail';
 import AdminPanel from './pages/AdminPanel';
 import EventDetail from './pages/EventDetail';
 
@@ -241,6 +242,7 @@ function App() {
               <Route path="/search" element={<SearchEvents />} />
               <Route path="/exhibitions" element={<SearchExhibitions />} />
               <Route path="/live/:liveId" element={<LiveBroadcastDetail />} />
+              <Route path="/exhibition/:liveId" element={<ExhibitionDetail />} />
               <Route path="/events/:eventId" element={<EventDetail />} />
               <Route path="/admin" element={<AdminPanel />} />
               <Route path="*" element={<Navigate to="/" replace />} />

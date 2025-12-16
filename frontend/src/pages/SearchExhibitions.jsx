@@ -426,9 +426,9 @@ const SearchExhibitions = () => {
       // eventId 정규화 (공백 제거)
       const _v_normalized_event_id = String(eventId).trim();
       
-      // 라이브 상세 페이지로 이동 (모든 이벤트는 live_broadcasts 테이블에서 조회)
-      const _v_detail_url = `/live/${encodeURIComponent(_v_normalized_event_id)}`;
-      console.log('✅ 라이브 상세 페이지로 이동:', {
+      // 입점몰 이벤트 상세 페이지로 이동
+      const _v_detail_url = `/exhibition/${encodeURIComponent(_v_normalized_event_id)}`;
+      console.log('✅ 입점몰 이벤트 상세 페이지로 이동:', {
         original: eventId,
         normalized: _v_normalized_event_id,
         url: _v_detail_url
