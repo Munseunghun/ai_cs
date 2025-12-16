@@ -1256,146 +1256,284 @@ const LiveBroadcastDetail = () => {
         );
       })()}
 
-      {/* ========== 3) 라이브 특화 정보 (STT 기반) ========== */}
-      <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary, mb: 3 }}>
-          <ScheduleIcon sx={{ mr: 1, color: DARK_COLORS.primary }} />
-          라이브 특화 정보 (STT 기반)
-        </Typography>
-        
-        <Box>
-          {/* 디버깅: STT 정보 확인 (개발 환경에서만) */}
-          {process.env.NODE_ENV === 'development' && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              <Typography variant="caption" component="div">
-                <strong>🔍 디버그 정보:</strong>
-                <div style={{ marginTop: '8px', fontSize: '0.75rem' }}>
-                  <div>live_specific: {liveData.live_specific ? '✅ 있음' : '❌ 없음'}</div>
-                  <div>stt_info: {liveData.stt_info ? '✅ 있음' : '❌ 없음'}</div>
-                  {liveData.stt_info && (
-                    <div style={{ marginTop: '4px', paddingLeft: '12px' }}>
-                      <div>key_mentions: {Array.isArray(liveData.stt_info.key_mentions) ? `✅ ${liveData.stt_info.key_mentions.length}개` : '❌ 없음'}</div>
-                      <div>broadcast_qa: {Array.isArray(liveData.stt_info.broadcast_qa) ? `✅ ${liveData.stt_info.broadcast_qa.length}개` : '❌ 없음'}</div>
-                      <div>timeline_summary: {Array.isArray(liveData.stt_info.timeline_summary) ? `✅ ${liveData.stt_info.timeline_summary.length}개` : '❌ 없음'}</div>
-                    </div>
-                  )}
-                  {liveData.live_specific && (
-                    <div style={{ marginTop: '4px', paddingLeft: '12px' }}>
-                      <div>key_mentions: {Array.isArray(liveData.live_specific.key_mentions) ? `✅ ${liveData.live_specific.key_mentions.length}개` : '❌ 없음'}</div>
-                      <div>broadcast_qa: {Array.isArray(liveData.live_specific.broadcast_qa) ? `✅ ${liveData.live_specific.broadcast_qa.length}개` : '❌ 없음'}</div>
-                      <div>timeline: {Array.isArray(liveData.live_specific.timeline) ? `✅ ${liveData.live_specific.timeline.length}개` : '❌ 없음'}</div>
-                    </div>
-                  )}
-                </div>
-              </Typography>
-            </Alert>
+      {/* ========== 3) 신규 수집 데이터 ========== */}
+      
+      {/* 쿠폰 정보 (신규) */}
+      {liveData.coupons_new && liveData.coupons_new.length > 0 && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <LocalOfferIcon sx={{ mr: 1 }} /> 🎟️ 쿠폰 정보
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          <Grid container spacing={2}>
+            {liveData.coupons_new.map((coupon, index) => (
+              <Grid item xs={12} sm={6} md={4} key={index}>
+                <Card sx={{ height: '100%', border: '2px solid #ff9800' }}>
+                  <CardContent>
+                    <Typography variant="h6" color="primary" gutterBottom>
+                      {coupon.discount_rate && `${coupon.discount_rate}% 할인`}
+                      {coupon.discount_amount && `${coupon.discount_amount.toLocaleString()}원 할인`}
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      {coupon.coupon_name}
+                    </Typography>
+                    <Chip 
+                      label={coupon.coupon_type || '할인쿠폰'} 
+                      size="small" 
+                      sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }} 
+                      sx={{ mt: 1 }}
+                    />
+                    {coupon.min_purchase_amount && (
+                      <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        최소 구매: {coupon.min_purchase_amount.toLocaleString()}원
+                      </Typography>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        </Paper>
+      )}
+
+      {/* 라이브 소개 (신규) */}
+      {liveData.intro && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <InfoIcon sx={{ mr: 1 }} /> 📺 라이브 소개
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          {liveData.intro.intro_title && (
+            <Typography variant="h5" sx={{ color: DARK_COLORS.text.primary }} gutterBottom fontWeight="bold" sx={{ color: DARK_COLORS.text.primary }}>
+              {liveData.intro.intro_title}
+            </Typography>
           )}
           
-          {/* 핵심 멘트 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: DARK_COLORS.text.primary }}>핵심 세일즈 멘트</Typography>
-          {(() => {
-            // 여러 경로에서 데이터 확인
-            const _v_key_mentions = liveData.live_specific?.key_mentions || 
-                                   liveData.stt_info?.key_mentions || 
-                                   liveData.stt_info?.key_message || 
-                                   [];
-            
-            if (Array.isArray(_v_key_mentions) && _v_key_mentions.length > 0) {
-              return _v_key_mentions.map((message, index) => (
-                <Alert key={index} severity="info" sx={{ mb: 1, bgcolor: alpha(DARK_COLORS.info, 0.1), color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>
-                  {typeof message === 'string' ? message : JSON.stringify(message)}
-                </Alert>
-              ));
-            } else {
-              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
-            }
-          })()}
+          {liveData.intro.intro_description && (
+            <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-wrap' }}>
+              {liveData.intro.intro_description}
+            </Typography>
+          )}
           
-          {/* 방송 QA */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 3 }}>시청자 QA</Typography>
-          {(() => {
-            // 여러 경로에서 데이터 확인
-            const _v_broadcast_qa = liveData.live_specific?.broadcast_qa || 
-                                    liveData.stt_info?.broadcast_qa || 
-                                    [];
-            
-            if (Array.isArray(_v_broadcast_qa) && _v_broadcast_qa.length > 0) {
-              return _v_broadcast_qa.map((qa, index) => {
-                // qa가 객체인지 문자열인지 확인
-                const _v_question = typeof qa === 'object' ? qa.question : (typeof qa === 'string' ? qa : '');
-                const _v_answer = typeof qa === 'object' ? qa.answer : '';
-                
-                return (
-                  <Card key={index} sx={{ mb: 1, bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}` }}>
+          {liveData.intro.intro_highlights && JSON.parse(liveData.intro.intro_highlights || '[]').length > 0 && (
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              {JSON.parse(liveData.intro.intro_highlights).map((highlight, idx) => (
+                <Chip key={idx} label={highlight} color="primary" />
+              ))}
+            </Stack>
+          )}
+          
+          {liveData.intro.host_name && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: alpha(DARK_COLORS.cardHoverBg, 0.5), border: `1px solid ${DARK_COLORS.border}`, borderRadius: 1 }}>
+              <Typography variant="subtitle2" color="text.secondary">진행자</Typography>
+              <Typography variant="body1" fontWeight="bold">{liveData.intro.host_name}</Typography>
+            </Box>
+          )}
+        </Paper>
+      )}
+
+      {/* 통계 정보 (신규) */}
+      {liveData.statistics && (
+        <Paper sx={{ p: 3, mb: 3, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
+          <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary }}>
+            <EventIcon sx={{ mr: 1 }} /> 📊 통계 정보
+          </Typography>
+          <Divider sx={{ mb: 2, borderColor: DARK_COLORS.border }} />
+          
+          <Grid container spacing={3}>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" color="primary">
+                  {liveData.statistics.view_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">조회수</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.error, 0.2), color: DARK_COLORS.error, border: `1px solid ${alpha(DARK_COLORS.error, 0.3)}` }}>
+                  {liveData.statistics.like_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">좋아요</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.success, 0.2), color: DARK_COLORS.success, border: `1px solid ${alpha(DARK_COLORS.success, 0.3)}` }}>
+                  {liveData.statistics.comment_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">댓글</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Typography variant="h4" sx={{ bgcolor: alpha(DARK_COLORS.warning, 0.2), color: DARK_COLORS.warning, border: `1px solid ${alpha(DARK_COLORS.warning, 0.3)}` }}>
+                  {liveData.statistics.share_count?.toLocaleString() || 0}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">공유</Typography>
+              </Card>
+            </Grid>
+          </Grid>
+        </Paper>
+      )}
+
+      {/* 실시간 댓글 (신규) */}
+      {liveData.comments && liveData.comments.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              💬 실시간 댓글 ({liveData.comments.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {liveData.comments.map((comment, index) => (
+                <Card key={index} sx={{ mb: 2, p: 2 }}>
+                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                    <Chip 
+                      label={comment.comment_type || 'comment'} 
+                      size="small" 
+                      color={comment.comment_type === 'question' ? 'warning' : 'default'}
+                    />
+                    {comment.user_name && (
+                      <Typography variant="caption" fontWeight="bold">
+                        {comment.user_name}
+                      </Typography>
+                    )}
+                  </Stack>
+                  <Typography variant="body2" sx={{ color: DARK_COLORS.text.primary }}>
+                    {comment.comment_text}
+                  </Typography>
+                  {comment.like_count > 0 && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      ❤️ {comment.like_count}
+                    </Typography>
+                  )}
+                </Card>
+              ))}
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+      )}
+
+      {/* FAQ (신규) */}
+      {liveData.faqs && liveData.faqs.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              ❓ 자주 묻는 질문 ({liveData.faqs.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {liveData.faqs.map((faq, index) => (
+              <Accordion key={index}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    {faq.category && (
+                      <Chip label={faq.category} size="small" color="info" />
+                    )}
+                    <Typography variant="body1" fontWeight="bold">
+                      Q: {faq.question}
+                    </Typography>
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    A: {faq.answer}
+                  </Typography>
+                </AccordionDetails>
+              </Accordion>
+            ))}
+          </AccordionDetails>
+        </Accordion>
+      )}
+
+      {/* 이미지 갤러리 (신규) */}
+      {liveData.images && liveData.images.length > 0 && (
+        <Accordion defaultExpanded={false}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="h6" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center' }}>
+              🖼️ 이미지 갤러리 ({liveData.images.length}개)
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {liveData.images.map((image, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card>
+                    <Box
+                      component="img"
+                      src={image.image_url}
+                      alt={image.image_alt || `이미지 ${index + 1}`}
+                      sx={{
+                        width: '100%',
+                        height: 200,
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
                     <CardContent>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: DARK_COLORS.primary }}>Q. {_v_question}</Typography>
-                      {_v_answer && (
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>A. {_v_answer}</Typography>
+                      <Chip 
+                        label={image.image_type || 'image'} 
+                        size="small" 
+                        color="primary"
+                      />
+                      {image.image_alt && (
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                          {image.image_alt}
+                        </Typography>
                       )}
                     </CardContent>
                   </Card>
-                );
-              });
-            } else {
-              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
-            }
-          })()}
-          
-          {/* 타임라인 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mt: 3 }}>방송 타임라인</Typography>
-          {(() => {
-            // 여러 경로에서 데이터 확인
-            const _v_timeline = liveData.live_specific?.timeline || 
-                               liveData.live_specific?.timeline_summary ||
-                               liveData.stt_info?.timeline_summary || 
-                               [];
-            
-            if (Array.isArray(_v_timeline) && _v_timeline.length > 0) {
-              return (
-                <TableContainer sx={{ bgcolor: DARK_COLORS.cardBg }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell width="100px">시간</TableCell>
-                        <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>내용</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {_v_timeline.map((timeline, index) => {
-                        const _v_time = typeof timeline === 'object' ? timeline.time : '';
-                        const _v_content = typeof timeline === 'object' ? (timeline.content || timeline.description) : timeline;
-                        
-                        return (
-                          <TableRow key={index}>
-                            <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>{_v_time || '-'}</TableCell>
-                            <TableCell sx={{ color: DARK_COLORS.text.primary, borderColor: DARK_COLORS.border }}>{_v_content || '-'}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              );
-            } else {
-              return <Typography variant="body2" sx={{ color: DARK_COLORS.text.secondary }}>정보 없음</Typography>;
-            }
-          })()}
-        </Box>
-      </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+      )}
 
-      {/* ========== 8) CS 응대용 정보 ========== */}
-      <Paper sx={{ p: 3, mb: 4, bgcolor: DARK_COLORS.cardBg, border: `1px solid ${DARK_COLORS.border}`, borderRadius: 3, boxShadow: '0 4px 24px rgba(0, 0, 0, 0.3)' }}>
-        <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', color: DARK_COLORS.text.primary, mb: 3 }}>
-          <InfoIcon sx={{ mr: 1, color: DARK_COLORS.info }} />
-          💬 CS 응대용 정보
-        </Typography>
-        
-        <Box>
-          {/* 예상 질문 테이블 */}
-          <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            ❓ 예상 고객 질문
-          </Typography>
-          <Box sx={{ mb: 4 }}>
+      {/* 하단 버튼 */}
+      <Box sx={{ textAlign: 'center', mt: 4 }}>
+        <Button 
+          variant="contained" 
+          size="large"
+          onClick={() => {
+            const _v_source_url = liveData.meta?.source_url || liveData.metadata?.source_url || liveData.source_url || liveData.event_url;
+            if (_v_source_url && _v_source_url !== 'about:blank' && _v_source_url.trim() !== '') {
+              // Referrer를 유지하면서 새 창 열기
+              const newWindow = window.open('', '_blank');
+              if (newWindow) {
+                newWindow.location.href = _v_source_url;
+              } else {
+                alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
+              }
+            } else {
+              alert('라이브 방송 URL을 찾을 수 없습니다.');
+            }
+          }}
+          sx={{ mr: 2 }}
+        >
+          라이브 방송 보기
+        </Button>
+        <Button 
+          variant="outlined" 
+          size="large"
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate('/search')}
+        >
+          목록으로 돌아가기
+        </Button>
+      </Box>
+    </Container>
+    </Box>
+  );
+};
+
+export default LiveBroadcastDetail;
             {(() => {
               // CS 정보에서 예상 질문 추출 및 파싱
               let _v_expected_questions = liveData.cs_info?.expected_questions || liveData.cs_response?.expected_questions || [];
