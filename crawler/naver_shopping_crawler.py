@@ -170,11 +170,29 @@ class NaverShoppingCrawler:
             return f"NAVER_SHOPPING_{int(time.time())}"
     
     def _collect_title(self) -> str:
-        """행사 타이틀 수집"""
+        """
+        행사 타이틀 수집
+        __PRELOADED_STATE__ JSON에서 타이틀 파싱
+        """
         logger.info("\n📌 [1] 행사 타이틀 수집 중...")
         
         try:
-            # 페이지 소스에서 타이틀 찾기
+            # 1. JSON 데이터에서 타이틀 추출 (우선순위 높음)
+            _v_state_data = self._extract_preloaded_state()
+            
+            if _v_state_data:
+                # shoppingStory.A.detail.postTitle에서 타이틀 추출
+                _v_shopping_story = _v_state_data.get('shoppingStory', {}).get('A', {})
+                _v_detail = _v_shopping_story.get('detail', {})
+                _v_post_title = _v_detail.get('postTitle', '')
+                
+                if _v_post_title:
+                    logger.info(f"   ✅ JSON에서 타이틀 발견: {_v_post_title}")
+                    return _v_post_title.strip()
+            
+            # 2. JSON에서 찾지 못한 경우, HTML 파싱 (폴백)
+            logger.info("   ℹ️ HTML에서 타이틀 검색 중...")
+            
             _v_soup = BeautifulSoup(self.driver.page_source, 'html.parser')
             
             # 방법 1: 페이지 타이틀
@@ -215,6 +233,8 @@ class NaverShoppingCrawler:
             
         except Exception as e:
             logger.error(f"   ❌ 타이틀 수집 실패: {e}")
+            import traceback
+            traceback.print_exc()
             return "제목 없음"
     
     def _collect_date(self) -> str:
@@ -245,147 +265,368 @@ class NaverShoppingCrawler:
             logger.error(f"   ❌ 행사 일자 수집 실패: {e}")
             return "날짜 정보 없음"
     
+    def _extract_preloaded_state(self) -> Dict:
+        """
+        페이지 소스에서 __PRELOADED_STATE__ JSON 데이터 추출
+        
+        Returns:
+            파싱된 JSON 데이터 딕셔너리
+        """
+        try:
+            _v_page_source = self.driver.page_source
+            
+            # __PRELOADED_STATE__ 패턴 찾기
+            _v_pattern = r'window\.__PRELOADED_STATE__=({.*?})</script>'
+            _v_match = re.search(_v_pattern, _v_page_source, re.DOTALL)
+            
+            if _v_match:
+                _v_json_str = _v_match.group(1)
+                _v_data = json.loads(_v_json_str)
+                logger.info("   ✅ __PRELOADED_STATE__ JSON 파싱 성공")
+                return _v_data
+            else:
+                logger.warning("   ⚠️ __PRELOADED_STATE__를 찾을 수 없습니다.")
+                return {}
+                
+        except json.JSONDecodeError as e:
+            logger.error(f"   ❌ JSON 파싱 실패: {e}")
+            return {}
+        except Exception as e:
+            logger.error(f"   ❌ __PRELOADED_STATE__ 추출 실패: {e}")
+            return {}
+    
     def _collect_benefits(self) -> List[Dict]:
-        """혜택 정보 수집 (금액대별 혜택)"""
+        """
+        혜택 정보 수집 (금액대별 혜택)
+        __PRELOADED_STATE__ JSON에서 benefitsV2 데이터 파싱
+        """
         logger.info("\n🎁 [3] 혜택 정보 수집 중...")
         
         _v_benefits = []
         
         try:
-            _v_soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-            _v_all_text = _v_soup.get_text()
+            # 1. JSON 데이터에서 혜택 정보 추출 (우선순위 높음)
+            _v_state_data = self._extract_preloaded_state()
             
-            # 금액대별 혜택 패턴
-            _v_price_patterns = [
-                r'(\d+만?\s*원)\s*이상\s*구매\s*시?\s*([^.]+)',
-                r'전\s*구매\s*고객\s*([^.]+)',
-            ]
-            
-            for pattern in _v_price_patterns:
-                _v_matches = re.findall(pattern, _v_all_text)
-                for match in _v_matches:
-                    if isinstance(match, tuple):
-                        if len(match) == 2:
-                            _v_benefits.append({
-                                'type': '금액대별 혜택',
-                                'condition': match[0].strip(),
-                                'benefit': match[1].strip()[:200]
-                            })
+            if _v_state_data:
+                # benefitsV2.A 배열에서 혜택 정보 추출
+                _v_benefits_v2 = _v_state_data.get('benefitsV2', {}).get('A', [])
+                
+                if _v_benefits_v2:
+                    logger.info(f"   📊 JSON에서 {len(_v_benefits_v2)}개의 혜택 발견")
+                    
+                    for benefit_item in _v_benefits_v2:
+                        _v_policy = benefit_item.get('policy', {})
+                        
+                        # 혜택 정책 정보 추출
+                        _v_benefit_name = _v_policy.get('benefitPolicyName', '')
+                        _v_benefit_value = _v_policy.get('benefitValue', 0)
+                        _v_min_order_amount = _v_policy.get('minOrderAmount', 0)
+                        _v_benefit_unit = _v_policy.get('benefitUnit', 'FIX')
+                        _v_coupon_kind = _v_policy.get('benefitCouponPolicy', {}).get('couponKind', '')
+                        
+                        # 혜택 조건 텍스트 생성
+                        if _v_min_order_amount > 0:
+                            _v_condition = f"{_v_min_order_amount:,}원 이상 구매시"
                         else:
-                            _v_benefits.append({
-                                'type': '금액대별 혜택',
-                                'condition': '전 구매 고객',
-                                'benefit': match[0].strip()[:200]
-                            })
+                            _v_condition = "전 구매 고객"
+                        
+                        # 혜택 내용 텍스트 생성
+                        if _v_benefit_unit == 'FIX':
+                            _v_benefit_text = f"{_v_benefit_value:,}원 할인"
+                        elif _v_benefit_unit == 'PERCENT':
+                            _v_benefit_text = f"{_v_benefit_value}% 할인"
+                        else:
+                            _v_benefit_text = f"{_v_benefit_value} 할인"
+                        
+                        # 쿠폰 종류 추가
+                        if _v_coupon_kind:
+                            _v_benefit_text += f" ({_v_coupon_kind} 쿠폰)"
+                        
+                        _v_benefits.append({
+                            'type': '금액대별 혜택',
+                            'condition': _v_condition,
+                            'benefit': f"{_v_benefit_name} - {_v_benefit_text}",
+                            'benefit_value': _v_benefit_value,
+                            'min_order_amount': _v_min_order_amount,
+                            'source': 'JSON'
+                        })
+                    
+                    logger.info(f"   ✅ JSON에서 혜택 {len(_v_benefits)}개 수집")
+                else:
+                    logger.info("   ℹ️ JSON에 benefitsV2 데이터가 없습니다.")
             
-            logger.info(f"   ✅ 혜택 {len(_v_benefits)}개 수집")
+            # 2. JSON에서 데이터를 찾지 못한 경우, HTML 텍스트 파싱 (폴백)
+            if not _v_benefits:
+                logger.info("   ℹ️ HTML 텍스트에서 혜택 정보 검색 중...")
+                
+                _v_soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+                _v_all_text = _v_soup.get_text()
+                
+                # 금액대별 혜택 패턴
+                _v_price_patterns = [
+                    r'(\d+만?\s*원)\s*이상\s*구매\s*시?\s*([^.]+)',
+                    r'전\s*구매\s*고객\s*([^.]+)',
+                ]
+                
+                for pattern in _v_price_patterns:
+                    _v_matches = re.findall(pattern, _v_all_text)
+                    for match in _v_matches:
+                        if isinstance(match, tuple):
+                            if len(match) == 2:
+                                _v_benefits.append({
+                                    'type': '금액대별 혜택',
+                                    'condition': match[0].strip(),
+                                    'benefit': match[1].strip()[:200],
+                                    'source': 'HTML'
+                                })
+                            else:
+                                _v_benefits.append({
+                                    'type': '금액대별 혜택',
+                                    'condition': '전 구매 고객',
+                                    'benefit': match[0].strip()[:200],
+                                    'source': 'HTML'
+                                })
+                
+                logger.info(f"   ✅ HTML에서 혜택 {len(_v_benefits)}개 수집")
+            
+            # 결과 출력
             for idx, benefit in enumerate(_v_benefits, 1):
-                logger.info(f"      [{idx}] {benefit['condition']}: {benefit['benefit'][:50]}")
+                logger.info(f"      [{idx}] {benefit['condition']}: {benefit['benefit'][:80]}")
             
             return _v_benefits
             
         except Exception as e:
             logger.error(f"   ❌ 혜택 정보 수집 실패: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def _collect_coupons(self) -> List[Dict]:
-        """쿠폰 정보 수집"""
+        """
+        쿠폰 정보 수집
+        __PRELOADED_STATE__ JSON에서 benefitsV2 데이터 파싱
+        """
         logger.info("\n🎫 [4] 쿠폰 정보 수집 중...")
         
         _v_coupons = []
         
         try:
-            _v_soup = BeautifulSoup(self.driver.page_source, 'html.parser')
-            _v_all_text = _v_soup.get_text()
+            # 1. JSON 데이터에서 쿠폰 정보 추출 (우선순위 높음)
+            _v_state_data = self._extract_preloaded_state()
             
-            # 쿠폰 관련 텍스트 찾기
-            _v_coupon_keywords = ['쿠폰', 'COUPON']
-            _v_lines = _v_all_text.split('\n')
-            
-            for line in _v_lines:
-                for keyword in _v_coupon_keywords:
-                    if keyword in line:
-                        _v_clean_line = line.strip()
-                        if _v_clean_line and len(_v_clean_line) > 3 and len(_v_clean_line) < 200:
+            if _v_state_data:
+                # benefitsV2.A 배열에서 쿠폰 정보 추출
+                _v_benefits_v2 = _v_state_data.get('benefitsV2', {}).get('A', [])
+                
+                if _v_benefits_v2:
+                    logger.info(f"   📊 JSON에서 {len(_v_benefits_v2)}개의 쿠폰 정책 발견")
+                    
+                    for benefit_item in _v_benefits_v2:
+                        _v_policy = benefit_item.get('policy', {})
+                        _v_coupon_policy = _v_policy.get('benefitCouponPolicy', {})
+                        
+                        # 쿠폰인 경우만 처리
+                        if _v_policy.get('benefitKind') == 'COUPON':
+                            _v_coupon_name = _v_policy.get('benefitPolicyName', '')
+                            _v_coupon_kind = _v_coupon_policy.get('couponKind', '')
+                            _v_benefit_value = _v_policy.get('benefitValue', 0)
+                            _v_min_order_amount = _v_coupon_policy.get('minOrderAmount', 0)
+                            _v_benefit_unit = _v_policy.get('benefitUnit', 'FIX')
+                            
+                            # 쿠폰 설명 생성
+                            _v_description_parts = []
+                            
+                            if _v_min_order_amount > 0:
+                                _v_description_parts.append(f"{_v_min_order_amount:,}원 이상 구매시")
+                            
+                            if _v_benefit_unit == 'FIX':
+                                _v_description_parts.append(f"{_v_benefit_value:,}원 할인")
+                            elif _v_benefit_unit == 'PERCENT':
+                                _v_description_parts.append(f"{_v_benefit_value}% 할인")
+                            
+                            if _v_coupon_kind:
+                                _v_description_parts.append(f"({_v_coupon_kind})")
+                            
                             _v_coupons.append({
                                 'type': '쿠폰',
-                                'name': _v_clean_line
+                                'name': _v_coupon_name,
+                                'description': ' '.join(_v_description_parts),
+                                'benefit_value': _v_benefit_value,
+                                'min_order_amount': _v_min_order_amount,
+                                'coupon_kind': _v_coupon_kind,
+                                'source': 'JSON'
                             })
+                    
+                    logger.info(f"   ✅ JSON에서 쿠폰 {len(_v_coupons)}개 수집")
+                else:
+                    logger.info("   ℹ️ JSON에 benefitsV2 데이터가 없습니다.")
             
-            # 중복 제거
-            _v_unique_coupons = []
-            _v_seen = set()
-            for coupon in _v_coupons:
-                if coupon['name'] not in _v_seen:
-                    _v_seen.add(coupon['name'])
-                    _v_unique_coupons.append(coupon)
+            # 2. JSON에서 데이터를 찾지 못한 경우, HTML 텍스트 파싱 (폴백)
+            if not _v_coupons:
+                logger.info("   ℹ️ HTML 텍스트에서 쿠폰 정보 검색 중...")
+                
+                _v_soup = BeautifulSoup(self.driver.page_source, 'html.parser')
+                _v_all_text = _v_soup.get_text()
+                
+                # 쿠폰 관련 텍스트 찾기
+                _v_coupon_keywords = ['쿠폰', 'COUPON']
+                _v_lines = _v_all_text.split('\n')
+                
+                for line in _v_lines:
+                    for keyword in _v_coupon_keywords:
+                        if keyword in line:
+                            _v_clean_line = line.strip()
+                            if _v_clean_line and len(_v_clean_line) > 3 and len(_v_clean_line) < 200:
+                                _v_coupons.append({
+                                    'type': '쿠폰',
+                                    'name': _v_clean_line,
+                                    'source': 'HTML'
+                                })
+                
+                # 중복 제거
+                _v_unique_coupons = []
+                _v_seen = set()
+                for coupon in _v_coupons:
+                    if coupon['name'] not in _v_seen:
+                        _v_seen.add(coupon['name'])
+                        _v_unique_coupons.append(coupon)
+                
+                _v_coupons = _v_unique_coupons
+                logger.info(f"   ✅ HTML에서 쿠폰 {len(_v_coupons)}개 수집")
             
-            logger.info(f"   ✅ 쿠폰 {len(_v_unique_coupons)}개 수집")
-            for idx, coupon in enumerate(_v_unique_coupons, 1):
-                logger.info(f"      [{idx}] {coupon['name'][:80]}")
+            # 결과 출력
+            for idx, coupon in enumerate(_v_coupons, 1):
+                _v_display_name = coupon.get('name', '')[:80]
+                _v_display_desc = coupon.get('description', '')
+                if _v_display_desc:
+                    logger.info(f"      [{idx}] {_v_display_name} - {_v_display_desc}")
+                else:
+                    logger.info(f"      [{idx}] {_v_display_name}")
             
-            return _v_unique_coupons
+            return _v_coupons
             
         except Exception as e:
             logger.error(f"   ❌ 쿠폰 정보 수집 실패: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def _collect_products(self) -> List[Dict]:
-        """상품 정보 수집"""
+        """
+        상품 정보 수집
+        __PRELOADED_STATE__ JSON에서 상품 데이터 파싱
+        """
         logger.info("\n🛍️  [5] 상품 정보 수집 중...")
         
         _v_products = []
         
         try:
-            # Selenium으로 상품 요소 찾기
-            try:
-                # 상품 링크 찾기 (a 태그 중 상품 URL 패턴)
-                _v_product_links = self.driver.find_elements(By.CSS_SELECTOR, 'a[href*="/products/"]')
-                
-                logger.info(f"   📦 상품 링크 {len(_v_product_links)}개 발견")
-                
-                # 중복 제거를 위한 set
-                _v_seen_urls = set()
-                
-                for idx, link in enumerate(_v_product_links[:20], 1):  # 최대 20개
-                    try:
-                        _v_url = link.get_attribute('href')
-                        if not _v_url or _v_url in _v_seen_urls:
-                            continue
-                        
-                        _v_seen_urls.add(_v_url)
-                        
-                        # 상품명 찾기
-                        _v_name = link.text.strip()
-                        if not _v_name or len(_v_name) < 3:
-                            # 부모 요소에서 텍스트 찾기
-                            _v_parent = link.find_element(By.XPATH, '..')
-                            _v_name = _v_parent.text.strip()
-                        
-                        if _v_name and len(_v_name) > 3:
-                            _v_products.append({
-                                'product_order': len(_v_products) + 1,
-                                'product_name': _v_name[:200],
-                                'product_url': _v_url,
-                                'original_price': None,
-                                'sale_price': None,
-                                'discount_rate': None
-                            })
-                            
-                            logger.info(f"      [{len(_v_products)}] {_v_name[:80]}")
-                    
-                    except Exception as e:
-                        logger.debug(f"      상품 {idx} 파싱 실패: {e}")
-                        continue
-                
-            except Exception as e:
-                logger.warning(f"   ⚠️ Selenium으로 상품 찾기 실패: {e}")
+            # 1. JSON 데이터에서 상품 정보 추출 (우선순위 높음)
+            _v_state_data = self._extract_preloaded_state()
             
-            logger.info(f"   ✅ 상품 {len(_v_products)}개 수집")
+            if _v_state_data:
+                # shoppingStory.A.detail.relationProductSections에서 상품 정보 추출
+                _v_shopping_story = _v_state_data.get('shoppingStory', {}).get('A', {})
+                _v_detail = _v_shopping_story.get('detail', {})
+                _v_product_sections = _v_detail.get('relationProductSections', [])
+                
+                if _v_product_sections:
+                    logger.info(f"   📊 JSON에서 {len(_v_product_sections)}개의 상품 섹션 발견")
+                    
+                    for section in _v_product_sections:
+                        _v_simple_products = section.get('simpleProducts', [])
+                        
+                        for product in _v_simple_products:
+                            _v_product_name = product.get('name', '') or product.get('dispName', '')
+                            _v_product_url = f"https://brand.naver.com{product.get('channel', {}).get('url', '')}/products/{product.get('id', '')}"
+                            _v_sale_price = product.get('salePrice', 0)
+                            _v_benefits_view = product.get('benefitsView', {})
+                            _v_discounted_price = _v_benefits_view.get('discountedSalePrice', 0)
+                            _v_discount_ratio = _v_benefits_view.get('discountedRatio', 0)
+                            
+                            if _v_product_name:
+                                _v_products.append({
+                                    'product_order': len(_v_products) + 1,
+                                    'product_name': _v_product_name[:200],
+                                    'product_url': _v_product_url,
+                                    'original_price': _v_sale_price if _v_sale_price > 0 else None,
+                                    'sale_price': _v_discounted_price if _v_discounted_price > 0 else None,
+                                    'discount_rate': _v_discount_ratio if _v_discount_ratio > 0 else None,
+                                    'source': 'JSON'
+                                })
+                    
+                    logger.info(f"   ✅ JSON에서 상품 {len(_v_products)}개 수집")
+                else:
+                    logger.info("   ℹ️ JSON에 상품 데이터가 없습니다.")
+            
+            # 2. JSON에서 데이터를 찾지 못한 경우, Selenium으로 상품 찾기 (폴백)
+            if not _v_products:
+                logger.info("   ℹ️ Selenium으로 상품 정보 검색 중...")
+                
+                try:
+                    # 상품 링크 찾기 (a 태그 중 상품 URL 패턴)
+                    _v_product_links = self.driver.find_elements(By.CSS_SELECTOR, 'a[href*="/products/"]')
+                    
+                    logger.info(f"   📦 상품 링크 {len(_v_product_links)}개 발견")
+                    
+                    # 중복 제거를 위한 set
+                    _v_seen_urls = set()
+                    
+                    for idx, link in enumerate(_v_product_links[:20], 1):  # 최대 20개
+                        try:
+                            _v_url = link.get_attribute('href')
+                            if not _v_url or _v_url in _v_seen_urls:
+                                continue
+                            
+                            _v_seen_urls.add(_v_url)
+                            
+                            # 상품명 찾기
+                            _v_name = link.text.strip()
+                            if not _v_name or len(_v_name) < 3:
+                                # 부모 요소에서 텍스트 찾기
+                                _v_parent = link.find_element(By.XPATH, '..')
+                                _v_name = _v_parent.text.strip()
+                            
+                            if _v_name and len(_v_name) > 3:
+                                _v_products.append({
+                                    'product_order': len(_v_products) + 1,
+                                    'product_name': _v_name[:200],
+                                    'product_url': _v_url,
+                                    'original_price': None,
+                                    'sale_price': None,
+                                    'discount_rate': None,
+                                    'source': 'HTML'
+                                })
+                        
+                        except Exception as e:
+                            logger.debug(f"      상품 {idx} 파싱 실패: {e}")
+                            continue
+                    
+                except Exception as e:
+                    logger.warning(f"   ⚠️ Selenium으로 상품 찾기 실패: {e}")
+                
+                logger.info(f"   ✅ HTML에서 상품 {len(_v_products)}개 수집")
+            
+            # 결과 출력
+            for idx, product in enumerate(_v_products[:10], 1):  # 처음 10개만 출력
+                _v_price_info = ""
+                if product.get('sale_price'):
+                    _v_price_info = f" - {product['sale_price']:,}원"
+                    if product.get('discount_rate'):
+                        _v_price_info += f" ({product['discount_rate']}% 할인)"
+                
+                logger.info(f"      [{idx}] {product['product_name'][:60]}{_v_price_info}")
+            
+            if len(_v_products) > 10:
+                logger.info(f"      ... 외 {len(_v_products) - 10}개 상품")
+            
             return _v_products
             
         except Exception as e:
             logger.error(f"   ❌ 상품 정보 수집 실패: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def save_to_supabase(self, p_data: Dict) -> bool:
@@ -452,19 +693,67 @@ class NaverShoppingCrawler:
                 
                 logger.info(f"   ✅ 상품 {len(p_data['products'])}개 저장")
             
-            # 3. 혜택/쿠폰 정보는 JSON으로 저장 (메타데이터)
-            _v_metadata = {
-                'benefits': p_data['benefits'],
-                'coupons': p_data['coupons']
-            }
+            # 3. 혜택 정보를 live_benefits 테이블에 저장
+            # 먼저 기존 혜택 데이터 삭제 (중복 방지)
+            try:
+                self.supabase.table('live_benefits').delete().eq('live_id', p_data['event_id']).eq('benefit_type', '할인').execute()
+            except Exception as e:
+                logger.debug(f"   기존 혜택 삭제 실패: {e}")
             
-            # live_broadcasts 테이블에 메타데이터 업데이트 (live_title_cs에 저장)
+            _v_benefit_count = 0
+            for idx, benefit in enumerate(p_data['benefits'], 1):
+                try:
+                    _v_benefit_data = {
+                        'live_id': p_data['event_id'],
+                        'benefit_type': '할인',
+                        'benefit_name': benefit.get('benefit', '')[:500],
+                        'benefit_detail': f"할인 금액: {benefit.get('benefit_value', 0):,}원\n최소 구매: {benefit.get('min_order_amount', 0):,}원",
+                        'benefit_condition': benefit.get('condition', ''),
+                        'benefit_valid_period': p_data.get('date_info', '')
+                    }
+                    
+                    # 삽입
+                    self.supabase.table('live_benefits').insert(_v_benefit_data).execute()
+                    _v_benefit_count += 1
+                except Exception as e:
+                    logger.debug(f"   혜택 저장 실패 (idx={idx}): {e}")
+            
+            logger.info(f"   ✅ 혜택 {_v_benefit_count}개 저장")
+            
+            # 4. 쿠폰 정보를 live_benefits 테이블에 저장
+            # 먼저 기존 쿠폰 데이터 삭제 (중복 방지)
+            try:
+                self.supabase.table('live_benefits').delete().eq('live_id', p_data['event_id']).eq('benefit_type', '쿠폰').execute()
+            except Exception as e:
+                logger.debug(f"   기존 쿠폰 삭제 실패: {e}")
+            
+            _v_coupon_count = 0
+            for idx, coupon in enumerate(p_data['coupons'], 1):
+                try:
+                    _v_coupon_data = {
+                        'live_id': p_data['event_id'],
+                        'benefit_type': '쿠폰',
+                        'benefit_name': coupon.get('name', '')[:500],
+                        'benefit_detail': coupon.get('description', ''),
+                        'benefit_condition': f"최소 구매: {coupon.get('min_order_amount', 0):,}원\n쿠폰 종류: {coupon.get('coupon_kind', '')}",
+                        'benefit_valid_period': p_data.get('date_info', '')
+                    }
+                    
+                    # 삽입
+                    self.supabase.table('live_benefits').insert(_v_coupon_data).execute()
+                    _v_coupon_count += 1
+                except Exception as e:
+                    logger.debug(f"   쿠폰 저장 실패 (idx={idx}): {e}")
+            
+            logger.info(f"   ✅ 쿠폰 {_v_coupon_count}개 저장")
+            
+            # 5. 메타데이터 업데이트 (live_title_cs에 요약 정보 저장)
             _v_metadata_str = f"{p_data['title']} | 혜택: {len(p_data['benefits'])}개 | 쿠폰: {len(p_data['coupons'])}개"
             self.supabase.table('live_broadcasts').update({
                 'live_title_cs': _v_metadata_str[:500]
             }).eq('live_id', p_data['event_id']).execute()
             
-            logger.info(f"   ✅ 혜택/쿠폰 정보 저장")
+            logger.info(f"   ✅ 메타데이터 저장")
             logger.info(f"\n{'='*80}")
             logger.info("✅ Supabase 저장 완료!")
             logger.info(f"{'='*80}")

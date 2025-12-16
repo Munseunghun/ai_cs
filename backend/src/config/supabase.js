@@ -13,27 +13,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  const errorMsg = 'Supabase 설정이 누락되었습니다. SUPABASE_URL과 SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY 또는 SUPABASE_ANON_KEY를 확인해주세요.';
-  logger.error(errorMsg);
-  logger.error('현재 환경 변수:', {
-    SUPABASE_URL: SUPABASE_URL ? '설정됨' : '누락',
-    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY ? '설정됨' : '누락',
-    SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY ? '설정됨' : '누락',
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? '설정됨' : '누락',
-  });
-  throw new Error(errorMsg);
+  logger.error('Supabase 설정이 누락되었습니다. SUPABASE_URL과 SUPABASE_SECRET_KEY, SUPABASE_PUBLISHABLE_KEY 또는 SUPABASE_ANON_KEY를 확인해주세요.');
+  throw new Error('Supabase 설정이 필요합니다.');
 }
-
-logger.info('Supabase 클라이언트 초기화 중...', {
-  url: SUPABASE_URL,
-  keyType: process.env.SUPABASE_SECRET_KEY ? 'SECRET_KEY' : 
-           process.env.SUPABASE_PUBLISHABLE_KEY ? 'PUBLISHABLE_KEY' : 'ANON_KEY'
-});
 
 // Supabase 클라이언트 생성
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-logger.info('Supabase 클라이언트 초기화 완료');
 
 /**
  * 데이터 삽입

@@ -1,0 +1,53 @@
+{
+  "platform": "네이버스마트스토어",
+  "brand": "아이오페",
+  "url": "https://brand.naver.com/iope/shoppingstory/detail?id=5002337684",
+  "event_id": "NAVER_SHOPPING_5002337684",
+  "title": "아이오페 XMD스템",
+  "date_info": "23.10.30~23.11.14",
+  "benefits": [],
+  "coupons": [],
+  "products": [
+    {
+      "product_order": 1,
+      "product_name": "BEST",
+      "product_url": "https://brand.naver.com/iope/products/5240107640",
+      "original_price": null,
+      "sale_price": null,
+      "discount_rate": null
+    },
+    {
+      "product_order": 2,
+      "product_name": "BEST",
+      "product_url": "https://brand.naver.com/iope/products/5237425925",
+      "original_price": null,
+      "sale_price": null,
+      "discount_rate": null
+    },
+    {
+      "product_order": 3,
+      "product_name": "BEST",
+      "product_url": "https://brand.naver.com/iope/products/5240147110",
+      "original_price": null,
+      "sale_price": null,
+      "discount_rate": null
+    },
+    {
+      "product_order": 4,
+      "product_name": "BEST",
+      "product_url": "https://brand.naver.com/iope/products/11868202014",
+      "original_price": null,
+      "sale_price": null,
+      "discount_rate": null
+    },
+    {
+      "product_order": 5,
+      "product_name": "BEST",
+      "product_url": "https://brand.naver.com/iope/products/8390872165",
+      "original_price": null,
+      "sale_price": null,
+      "discount_rate": null
+    }
+  ],
+  "collected_at": "2025-12-16T11:10:03.340934"
+}
