@@ -265,6 +265,9 @@ const SearchEvents = () => {
       const apiUrl = `${API_BASE_URL}/api/events/search`;
       const queryParams = new URLSearchParams();
       
+      // Live 방송 조회에서는 전시/이벤트 데이터 제외
+      queryParams.append('exclude_exhibition', 'true');
+      
       // 필터 파라미터 추가 (빈 문자열이나 "전체"는 제외)
       if (filters.channel && filters.channel.trim() !== '' && filters.channel !== '전체') {
         queryParams.append('channel', filters.channel);

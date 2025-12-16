@@ -658,6 +658,7 @@ class NaverShoppingCrawler:
                 'live_title_cs': p_data['title'],
                 'source_url': p_data['url'],
                 'broadcast_date': datetime.now().date().isoformat(),
+                'broadcast_type': 'EXHIBITION',  # 전시/이벤트 페이지 구분
                 'status': 'ACTIVE',  # 기본값
                 'collected_at': datetime.now().isoformat()
             }

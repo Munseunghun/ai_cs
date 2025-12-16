@@ -266,6 +266,9 @@ const SearchExhibitions = () => {
       const apiUrl = `${API_BASE_URL}/api/events/search`;
       const queryParams = new URLSearchParams();
       
+      // 입점몰 이벤트, 전시 조회에서는 broadcast_type = 'EXHIBITION'만 조회
+      queryParams.append('broadcast_type', 'EXHIBITION');
+      
       // 필터 파라미터 추가 (빈 문자열이나 "전체"는 제외)
       if (filters.channel && filters.channel.trim() !== '' && filters.channel !== '전체') {
         queryParams.append('channel', filters.channel);

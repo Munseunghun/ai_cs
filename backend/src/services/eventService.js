@@ -68,6 +68,16 @@ const searchEvents = async (p_filters = {}) => {
     const _v_has_keyword_filter = !!(p_filters.keyword && p_filters.keyword.trim() !== '');
     const _v_needs_client_filtering = !!(_v_has_channel_filter || _v_has_keyword_filter || _v_has_brand_filter);
     
+    // broadcast_type 필터 (LIVE: 라이브 방송, EXHIBITION: 전시/이벤트)
+    if (p_filters.broadcast_type) {
+      _v_query = _v_query.eq('broadcast_type', p_filters.broadcast_type);
+      logger.info('broadcast_type 필터 적용:', { broadcast_type: p_filters.broadcast_type });
+    } else if (p_filters.exclude_exhibition === 'true') {
+      // Live 방송 조회에서는 EXHIBITION 제외 (NULL 또는 'LIVE'만 조회)
+      _v_query = _v_query.or('broadcast_type.is.null,broadcast_type.neq.EXHIBITION');
+      logger.info('EXHIBITION 제외 필터 적용');
+    }
+    
     // 상태 필터 확인 (빈 문자열이나 "전체"는 필터로 인식하지 않음)
     const _v_status_value = p_filters.status ? p_filters.status.trim().toUpperCase() : '';
     const _v_has_status_filter = !!(_v_status_value && 
