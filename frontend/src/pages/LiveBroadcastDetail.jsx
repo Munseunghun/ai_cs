@@ -1499,27 +1499,6 @@ const LiveBroadcastDetail = () => {
       {/* 하단 버튼 */}
       <Box sx={{ textAlign: 'center', mt: 4 }}>
         <Button 
-          variant="contained" 
-          size="large"
-          onClick={() => {
-            const _v_source_url = liveData.meta?.source_url || liveData.metadata?.source_url || liveData.source_url || liveData.event_url;
-            if (_v_source_url && _v_source_url !== 'about:blank' && _v_source_url.trim() !== '') {
-              // Referrer를 유지하면서 새 창 열기
-              const newWindow = window.open('', '_blank');
-              if (newWindow) {
-                newWindow.location.href = _v_source_url;
-              } else {
-                alert('팝업이 차단되었습니다. 팝업 차단을 해제해주세요.');
-              }
-            } else {
-              alert('라이브 방송 URL을 찾을 수 없습니다.');
-            }
-          }}
-          sx={{ mr: 2 }}
-        >
-          라이브 방송 보기
-        </Button>
-        <Button 
           variant="outlined" 
           size="large"
           startIcon={<ArrowBackIcon />}
