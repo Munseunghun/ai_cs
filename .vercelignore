@@ -1,0 +1,9 @@
+node_modules
+.git
+backend
+crawler
+database
+인수인계용_산출물
+*.md
+.env
+.DS_Store
