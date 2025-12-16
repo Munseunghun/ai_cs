@@ -72,7 +72,7 @@ const DARK_COLORS = {
   chart: ['#6366F1', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#A855F7']
 };
 
-const SearchEvents = () => {
+const SearchExhibitions = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
