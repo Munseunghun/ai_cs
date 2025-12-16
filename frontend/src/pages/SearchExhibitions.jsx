@@ -158,10 +158,18 @@ const SearchExhibitions = () => {
   useEffect(() => {
     // 입점몰 이벤트, 전시 조회에서는 네이버 스마트스토어만 표시
     const options = [
-      { value: '', label: '전체' },
       { value: 'NAVER_SHOPPING', label: '네이버스마트스토어' }
     ];
     setPlatformOptions(options);
+    
+    // 초기 필터 값을 네이버 스마트스토어로 설정
+    if (!filters.channel) {
+      setFilters(prev => ({
+        ...prev,
+        channel: 'NAVER_SHOPPING',
+        brand: '아이오페' // 브랜드도 아이오페로 기본 설정
+      }));
+    }
   }, []);
   
   // URL 파라미터가 변경될 때 필터 상태 업데이트 및 자동 검색 실행
@@ -773,17 +781,8 @@ const SearchExhibitions = () => {
                   },
                 }}
               >
-                <MenuItem value="">전체</MenuItem>
-                <MenuItem value="설화수">설화수</MenuItem>
-                <MenuItem value="라네즈">라네즈</MenuItem>
+                {/* 입점몰 이벤트, 전시 조회에서는 아이오페만 표시 */}
                 <MenuItem value="아이오페">아이오페</MenuItem>
-                <MenuItem value="헤라">헤라</MenuItem>
-                <MenuItem value="에스트라">에스트라</MenuItem>
-                <MenuItem value="이니스프리">이니스프리</MenuItem>
-                <MenuItem value="해피바스">해피바스</MenuItem>
-                <MenuItem value="바이탈뷰티">바이탈뷰티</MenuItem>
-                <MenuItem value="프리메라">프리메라</MenuItem>
-                <MenuItem value="오설록">오설록</MenuItem>
               </Select>
             </FormControl>
           </Grid>
