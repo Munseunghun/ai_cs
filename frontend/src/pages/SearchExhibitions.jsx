@@ -1,6 +1,6 @@
 /**
- * 입점몰 이벤트, 전시 조회 페이지
- * 입점몰 이벤트 및 전시 검색, 필터링, 상세 보기 기능 (Dark Modern Theme)
+ * Live 방송 조회 페이지
+ * 라이브 방송 검색, 필터링, 상세 보기 기능 (Dark Modern Theme)
  */
 
 import React, { useState, useEffect } from 'react';
@@ -72,7 +72,7 @@ const DARK_COLORS = {
   chart: ['#6366F1', '#EC4899', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6', '#14B8A6', '#F97316', '#06B6D4', '#A855F7']
 };
 
-const SearchExhibitions = () => {
+const SearchEvents = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
@@ -154,22 +154,11 @@ const SearchExhibitions = () => {
     }
   };
   
-  // 플랫폼 목록 로드 (네이버 스마트스토어만 표시)
+  // 플랫폼 목록 로드
   useEffect(() => {
-    // 입점몰 이벤트, 전시 조회에서는 네이버 스마트스토어만 표시
-    const options = [
-      { value: 'NAVER_SHOPPING', label: '네이버스마트스토어' }
-    ];
+    const platforms = getPlatforms();
+    const options = getPlatformFilterOptions();
     setPlatformOptions(options);
-    
-    // 초기 필터 값을 네이버 스마트스토어로 설정
-    if (!filters.channel) {
-      setFilters(prev => ({
-        ...prev,
-        channel: 'NAVER_SHOPPING',
-        brand: '아이오페' // 브랜드도 아이오페로 기본 설정
-      }));
-    }
   }, []);
   
   // URL 파라미터가 변경될 때 필터 상태 업데이트 및 자동 검색 실행
@@ -273,9 +262,6 @@ const SearchExhibitions = () => {
       // 백엔드 API 호출
       const apiUrl = `${API_BASE_URL}/api/events/search`;
       const queryParams = new URLSearchParams();
-      
-      // 입점몰 이벤트, 전시 조회에서는 broadcast_type = 'EXHIBITION'만 조회
-      queryParams.append('broadcast_type', 'EXHIBITION');
       
       // 필터 파라미터 추가 (빈 문자열이나 "전체"는 제외)
       if (filters.channel && filters.channel.trim() !== '' && filters.channel !== '전체') {
@@ -434,9 +420,9 @@ const SearchExhibitions = () => {
       // eventId 정규화 (공백 제거)
       const _v_normalized_event_id = String(eventId).trim();
       
-      // 입점몰 이벤트 상세 페이지로 이동
-      const _v_detail_url = `/exhibition/${encodeURIComponent(_v_normalized_event_id)}`;
-      console.log('✅ 입점몰 이벤트 상세 페이지로 이동:', {
+      // 라이브 상세 페이지로 이동 (모든 이벤트는 live_broadcasts 테이블에서 조회)
+      const _v_detail_url = `/live/${encodeURIComponent(_v_normalized_event_id)}`;
+      console.log('✅ 라이브 상세 페이지로 이동:', {
         original: eventId,
         normalized: _v_normalized_event_id,
         url: _v_detail_url
@@ -644,7 +630,7 @@ const SearchExhibitions = () => {
               mb: 1,
             }}
           >
-            입점몰 이벤트, 전시 조회
+            Live 방송 조회
           </Typography>
           <Typography 
             variant="h6" 
@@ -654,7 +640,7 @@ const SearchExhibitions = () => {
               letterSpacing: '0.02em',
             }}
           >
-            입점몰 이벤트와 전시를 검색하고 상담 문구를 생성하세요
+            진행 중인 라이브 방송을 검색하고 상담 문구를 생성하세요
           </Typography>
         </Box>
       
@@ -781,8 +767,17 @@ const SearchExhibitions = () => {
                   },
                 }}
               >
-                {/* 입점몰 이벤트, 전시 조회에서는 아이오페만 표시 */}
+                <MenuItem value="">전체</MenuItem>
+                <MenuItem value="설화수">설화수</MenuItem>
+                <MenuItem value="라네즈">라네즈</MenuItem>
                 <MenuItem value="아이오페">아이오페</MenuItem>
+                <MenuItem value="헤라">헤라</MenuItem>
+                <MenuItem value="에스트라">에스트라</MenuItem>
+                <MenuItem value="이니스프리">이니스프리</MenuItem>
+                <MenuItem value="해피바스">해피바스</MenuItem>
+                <MenuItem value="바이탈뷰티">바이탈뷰티</MenuItem>
+                <MenuItem value="프리메라">프리메라</MenuItem>
+                <MenuItem value="오설록">오설록</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -1450,6 +1445,6 @@ const SearchExhibitions = () => {
   );
 };
 
-export default SearchExhibitions;
+export default SearchEvents;
 
 

@@ -22,7 +22,6 @@ const eventRoutes = require('./routes/eventRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const eventDetailRoutes = require('./routes/eventDetail');
 
 // Express 앱 생성
 const app = express();
@@ -117,7 +116,6 @@ app.get('/health', (p_req, p_res) => {
 
 // API 라우트
 app.use('/api/auth', authRoutes);
-app.use('/api/events', eventDetailRoutes);  // 이벤트 상세 조회 (먼저 등록)
 app.use('/api/events', eventRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/favorites', favoriteRoutes);

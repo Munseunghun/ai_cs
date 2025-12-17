@@ -100,8 +100,8 @@ const validateEventId = [
     .trim()
     .isLength({ min: 1, max: 255 })
     .withMessage('이벤트 ID는 1-255자 사이의 문자열이어야 합니다.')
-    .matches(/^[A-Za-z0-9_]+$/)
-    .withMessage('이벤트 ID는 영문, 숫자, 언더스코어만 사용 가능합니다.'),
+    .matches(/^[A-Z0-9_]+$/)
+    .withMessage('이벤트 ID는 대문자 영문, 숫자, 언더스코어만 사용 가능합니다.'),
   
   handleValidationErrors,
 ];

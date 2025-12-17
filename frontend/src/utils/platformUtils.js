@@ -9,7 +9,6 @@ const STORAGE_KEY_PLATFORMS = 'admin_platforms';
 // 기본 플랫폼 목록 (하드코딩된 기본값)
 const DEFAULT_PLATFORMS = [
   { id: 'NAVER', code: 'NAVER', name: '네이버', url: 'https://shoppinglive.naver.com', isActive: true },
-  { id: 'NAVER_SHOPPING', code: 'NAVER_SHOPPING', name: '네이버스마트스토어', url: 'https://brand.naver.com', isActive: true },
   { id: 'KAKAO', code: 'KAKAO', name: '카카오', url: 'https://shoppinglive.kakao.com', isActive: true },
   { id: '11ST', code: '11ST', name: '11번가', url: 'https://m.11st.co.kr/page/main/live11', isActive: true },
   { id: 'GMARKET', code: 'GMARKET', name: 'G마켓', url: 'https://m.gmarket.co.kr/n/live/schedule', isActive: true },
@@ -18,7 +17,6 @@ const DEFAULT_PLATFORMS = [
   { id: 'MUSINSA', code: 'MUSINSA', name: '무신사', url: 'https://www.musinsa.com/campaign/musinsa_live/0', isActive: true },
   { id: 'LOTTEON', code: 'LOTTEON', name: '롯데온', url: 'https://www.lotteon.com/display/planV2/planDetail', isActive: true },
   { id: 'AMOREMALL', code: 'AMOREMALL', name: '아모레몰', url: 'https://www.amoremall.com/kr/ko/display/live', isActive: true },
-  { id: 'INNISFREE_MALL', code: 'INNISFREE_MALL', name: '이니스프리몰', url: 'https://www.innisfree.com/kr/ko/display/live', isActive: true },
 ];
 
 /**
@@ -106,9 +104,6 @@ export const normalizePlatformCode = (code) => {
     'INNISFREE': 'INNISFREE_MALL',
     '이니스프리몰': 'INNISFREE_MALL',
     '이니스프리': 'INNISFREE_MALL',
-    'NAVER_SHOPPING': 'NAVER_SHOPPING',
-    '네이버스마트스토어': 'NAVER_SHOPPING',
-    '네이버쇼핑': 'NAVER_SHOPPING',
   };
   
   return codeMap[codeUpper] || codeUpper;

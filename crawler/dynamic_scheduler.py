@@ -54,7 +54,6 @@ class DynamicDataCollectionScheduler:
             'LOTTEON': 'crawl_multi_brands.py',
             'AMOREMALL': 'crawl_multi_brands.py',
             'INNISFREE_MALL': 'parsers/innisfree_live_parser.py',
-            'NAVER_SHOPPING': 'naver_shopping_crawler.py',
         }
         
         # 수집 통계
@@ -277,7 +276,7 @@ def main():
     logger.info("=" * 80)
     logger.info("🚀 동적 플랫폼 데이터 수집 스케줄러 시작")
     logger.info("=" * 80)
-    logger.info("⏰ 수집 주기: 매 시간 정각 (00:00, 01:00, 02:00, ..., 23:00)")
+    logger.info("⏰ 수집 주기: 1시간마다")
     logger.info("📦 수집 대상: 관리자 기능에서 추가한 활성 플랫폼")
     logger.info("=" * 80)
     
@@ -287,19 +286,8 @@ def main():
     logger.info("🔄 초기 데이터 수집 실행...")
     scheduler.collect_all_platforms_data()
     
-    # 매 시간 정각에 실행되도록 스케줄 등록
-    # schedule.every().hour.at(":00")는 매 시간 00분에 실행됨 (예: 09:00, 10:00, 11:00, ...)
+    # 매 시간 정각에 실행 (예: 10:00, 11:00, 12:00...)
     schedule.every().hour.at(":00").do(scheduler.collect_all_platforms_data)
-    
-    # 다음 실행 시간 계산 및 로깅
-    _v_now = datetime.now()
-    _v_next_hour = _v_now.replace(minute=0, second=0, microsecond=0)
-    if _v_next_hour <= _v_now:
-        _v_next_hour = _v_next_hour.replace(hour=_v_next_hour.hour + 1)
-    _v_next_run_str = _v_next_hour.strftime("%Y-%m-%d %H:%M:%S")
-    
-    logger.info(f"⏰ 다음 수집 예정 시간: {_v_next_run_str}")
-    logger.info("=" * 80)
     
     # 매일 자정에 통계 출력
     schedule.every().day.at("00:00").do(scheduler.get_stats)
@@ -310,17 +298,7 @@ def main():
     
     try:
         while True:
-            # 스케줄 실행
             schedule.run_pending()
-            
-            # 다음 실행 시간 확인 및 로깅 (매 10분마다)
-            _v_current_time = datetime.now()
-            if _v_current_time.minute % 10 == 0 and _v_current_time.second < 5:
-                _v_next_jobs = schedule.jobs
-                if _v_next_jobs:
-                    _v_next_job = _v_next_jobs[0]
-                    logger.info(f"⏰ 다음 수집 예정 시간: {_v_next_job.next_run.strftime('%Y-%m-%d %H:%M:%S')}")
-            
             time.sleep(60)  # 1분마다 스케줄 체크
     except KeyboardInterrupt:
         logger.info("\n⏹️  스케줄러 종료")

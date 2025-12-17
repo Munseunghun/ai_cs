@@ -48,7 +48,7 @@ import { getPlatforms, getPlatformFilterOptions, normalizePlatformCode } from '.
 
 // API 기본 URL (환경변수 또는 기본값)
 const getApiBaseUrl = () => {
-  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+  const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
   return baseUrl.replace(/\/api\/?$/, '');
 };
 const API_BASE_URL = getApiBaseUrl();
@@ -154,12 +154,10 @@ const SearchEvents = () => {
     }
   };
   
-  // 플랫폼 목록 로드 (네이버 스마트스토어 제외)
+  // 플랫폼 목록 로드
   useEffect(() => {
     const platforms = getPlatforms();
-    const allOptions = getPlatformFilterOptions();
-    // 네이버 스마트스토어 제외 (Live 방송 조회에서는 제외)
-    const options = allOptions.filter(opt => opt.value !== 'NAVER_SHOPPING');
+    const options = getPlatformFilterOptions();
     setPlatformOptions(options);
   }, []);
   
@@ -264,9 +262,6 @@ const SearchEvents = () => {
       // 백엔드 API 호출
       const apiUrl = `${API_BASE_URL}/api/events/search`;
       const queryParams = new URLSearchParams();
-      
-      // Live 방송 조회에서는 전시/이벤트 데이터 제외
-      queryParams.append('exclude_exhibition', 'true');
       
       // 필터 파라미터 추가 (빈 문자열이나 "전체"는 제외)
       if (filters.channel && filters.channel.trim() !== '' && filters.channel !== '전체') {
@@ -706,20 +701,7 @@ const SearchEvents = () => {
                 }}
               >
                 <MenuItem value="">전체</MenuItem>
-                <MenuItem value="NAVER">네이버</MenuItem>
-                <MenuItem value="NAVER_SHOPPING">네이버스마트스토어</MenuItem>
-                <MenuItem value="KAKAO">카카오</MenuItem>
-                <MenuItem value="11ST">11번가</MenuItem>
-                <MenuItem value="GMARKET">G마켓</MenuItem>
-                <MenuItem value="OLIVEYOUNG">올리브영</MenuItem>
-                <MenuItem value="GRIP">그립</MenuItem>
-                <MenuItem value="MUSINSA">무신사</MenuItem>
-                <MenuItem value="LOTTEON">롯데온</MenuItem>
-                <MenuItem value="AMOREMALL">아모레몰</MenuItem>
-                <MenuItem value="INNISFREE_MALL">이니스프리몰</MenuItem>
-                {platformOptions.filter(opt => 
-                  !['NAVER', 'NAVER_SHOPPING', 'KAKAO', '11ST', 'GMARKET', 'OLIVEYOUNG', 'GRIP', 'MUSINSA', 'LOTTEON', 'AMOREMALL', 'INNISFREE_MALL'].includes(opt.value)
-                ).map((option) => (
+                {platformOptions.map((option) => (
                   <MenuItem key={option.value} value={option.value}>
                     {option.label}
                   </MenuItem>

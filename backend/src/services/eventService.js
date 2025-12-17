@@ -68,16 +68,6 @@ const searchEvents = async (p_filters = {}) => {
     const _v_has_keyword_filter = !!(p_filters.keyword && p_filters.keyword.trim() !== '');
     const _v_needs_client_filtering = !!(_v_has_channel_filter || _v_has_keyword_filter || _v_has_brand_filter);
     
-    // broadcast_type 필터 (LIVE: 라이브 방송, EXHIBITION: 전시/이벤트)
-    if (p_filters.broadcast_type) {
-      _v_query = _v_query.eq('broadcast_type', p_filters.broadcast_type);
-      logger.info('broadcast_type 필터 적용:', { broadcast_type: p_filters.broadcast_type });
-    } else if (p_filters.exclude_exhibition === 'true') {
-      // Live 방송 조회에서는 EXHIBITION 제외 (NULL 또는 'LIVE'만 조회)
-      _v_query = _v_query.or('broadcast_type.is.null,broadcast_type.neq.EXHIBITION');
-      logger.info('EXHIBITION 제외 필터 적용');
-    }
-    
     // 상태 필터 확인 (빈 문자열이나 "전체"는 필터로 인식하지 않음)
     const _v_status_value = p_filters.status ? p_filters.status.trim().toUpperCase() : '';
     const _v_has_status_filter = !!(_v_status_value && 
@@ -655,12 +645,73 @@ const getEventById = async (p_event_id, p_user_id = null) => {
       supabaseClient.from('live_images').select('*').eq('live_id', _v_normalized_live_id).order('image_type', { ascending: true })
     ]);
     
+    // ✅ 네이버 쇼핑 데이터의 혜택/쿠폰 정보 파싱 (live_title_cs에서 추출)
+    const parseNaverShoppingBenefits = (p_live_title_cs) => {
+      const _v_parsed_benefits = [];
+      const _v_parsed_coupons = [];
+      
+      if (!p_live_title_cs || typeof p_live_title_cs !== 'string') {
+        return { benefits: [], coupons: [] };
+      }
+      
+      // 메타데이터 패턴: "타이틀 | 혜택: N개 | 쿠폰: M개"
+      const _v_metadata_match = p_live_title_cs.match(/혜택:\s*(\d+)개.*?쿠폰:\s*(\d+)개/);
+      
+      if (_v_metadata_match) {
+        const _v_benefit_count = parseInt(_v_metadata_match[1], 10);
+        const _v_coupon_count = parseInt(_v_metadata_match[2], 10);
+        
+        logger.info('네이버 쇼핑 메타데이터 발견:', {
+          benefit_count: _v_benefit_count,
+          coupon_count: _v_coupon_count
+        });
+        
+        // 혜택 정보 생성 (실제 데이터는 JSON 파일에 있으므로 플레이스홀더)
+        for (let i = 0; i < _v_benefit_count; i++) {
+          _v_parsed_benefits.push({
+            benefit_id: `NAVER_SHOPPING_BENEFIT_${i + 1}`,
+            benefit_type: '금액대별 혜택',
+            benefit_name: `혜택 ${i + 1}`,
+            benefit_detail: '네이버 쇼핑 전시 페이지 혜택',
+            benefit_condition: '구매 금액대별 적용',
+            is_from_metadata: true
+          });
+        }
+        
+        // 쿠폰 정보 생성
+        for (let i = 0; i < _v_coupon_count; i++) {
+          _v_parsed_coupons.push({
+            benefit_id: `NAVER_SHOPPING_COUPON_${i + 1}`,
+            benefit_type: '쿠폰',
+            benefit_name: `쿠폰 ${i + 1}`,
+            benefit_detail: '네이버 쇼핑 전시 페이지 쿠폰',
+            benefit_condition: '최소 구매 금액 조건',
+            is_from_metadata: true
+          });
+        }
+      }
+      
+      return {
+        benefits: _v_parsed_benefits,
+        coupons: _v_parsed_coupons
+      };
+    };
+    
+    // 네이버 쇼핑 데이터 파싱
+    const _v_naver_shopping_data = parseNaverShoppingBenefits(_v_data.live_title_cs);
+    
     // live_benefits 테이블에서 benefit_type으로 분류
     const _v_discounts_raw = _v_all_benefits?.filter(b => b.benefit_type === '할인') || [];
     const _v_gifts_raw = _v_all_benefits?.filter(b => b.benefit_type === '사은품' || b.benefit_type === 'GWP') || [];
-    const _v_coupons_raw = _v_all_benefits?.filter(b => b.benefit_type === '쿠폰' || b.benefit_type === '적립') || [];
+    const _v_coupons_raw = [
+      ...(_v_all_benefits?.filter(b => b.benefit_type === '쿠폰' || b.benefit_type === '적립') || []),
+      ..._v_naver_shopping_data.coupons  // ✅ 네이버 쇼핑 쿠폰 추가
+    ];
     const _v_shipping_raw = _v_all_benefits?.filter(b => b.benefit_type === '배송') || [];
-    const _v_benefits = _v_all_benefits || [];
+    const _v_benefits = [
+      ...(_v_all_benefits || []),
+      ..._v_naver_shopping_data.benefits  // ✅ 네이버 쇼핑 혜택 추가
+    ];
     
     // 혜택 중복 제거 함수
     const removeDuplicateBenefits = (p_benefits) => {
